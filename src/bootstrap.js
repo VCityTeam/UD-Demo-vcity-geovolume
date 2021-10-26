@@ -3,8 +3,8 @@
 import * as udviz from 'ud-viz';
 import { TilesManager } from 'ud-viz/src/Components/Components';
 import { IfcAttributeModule } from './Extensions/IfcAttributeModule/IfcAttributeModule';
+import { GeoVolumeSource } from './Extensions/GeoVolumeModule/GeoVolume/GeoVolumeSource';
 
-import { GeoVolumeSource } from 'ud-viz/src/Widgets/Components/Components';
 
 const app = new udviz.Templates.AllWidget();
 
