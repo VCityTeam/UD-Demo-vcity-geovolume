@@ -2,6 +2,9 @@
 
 The demonstration can be locally (on your desktop) started in the following way (fist, check if you have the [pre-requisites](#Pre-requisites)):
 
+First, [install](https://github.com/VCityTeam/GeoVolume-Server) the GeoVolume server.
+
+Then :
 ```
 npm install
 npm run debug      # integrates building
@@ -16,16 +19,6 @@ Note that technically the `npm run debug` command will use the [webpack-dev-serv
 - launches a watcher (surveying changes in sources)
 - in case of change that repacks an updated bundle
 - that triggers a client (hot) reload
-
-## Technical notes concerning the template application
-
-Some modules used by the DemoFull require some server-side components to be installed on
-some server (possibly your desktop). For example
-
-- the 3D objects (buildings) are (by default) serverd by a LIRIS server
-  and thus require no specific configuratione there is nothing more to do
-- handling of documents will require you to [install the API_enhanced_city](https://github.com/VCityTeam/UD-Serv/blob/master/API_Enhanced_City/INSTALL.md).
-- you can also modify the [application configuration file](assets/config/config.json)
 
 ## Pre-requisites
 
