@@ -7,7 +7,7 @@ First, [install](https://github.com/VCityTeam/GeoVolume-Server) the GeoVolume se
 Then :
 ```
 npm install
-npm run debug      # integrates building
+npm run debug      
 ```
 
 and then use your favorite (web) browser to open
