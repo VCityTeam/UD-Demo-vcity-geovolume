@@ -1,4 +1,5 @@
 import { Source } from 'itowns';
+import {THREE}  from 'ud-viz';
 import * as jquery from 'jquery';
 import { MAIN_LOOP_EVENTS } from 'itowns';
 import { GeoVolume } from './GeoVolume';
@@ -29,27 +30,43 @@ export class GeoVolumeSource extends Source {
 
     this.isGeoVolumeSource = true;
     this.itownsView = itownsView;
-
-    // Request update every active frame
-    this.itownsView.addFrameRequester(
-      MAIN_LOOP_EVENTS.AFTER_CAMERA_UPDATE,
-      () => this.getGeovolumesFromExtent()
-    );
-
     this.url = `${source.url}`;
+    console.log(itownsView);
+    setTimeout(() => {  this.getGeovolumesFromExtent(); }, 2000);
+
 
     /**
      * Array of geovolumes
      */
     this.collection = new Array();
 
-    this.loadCollection();
+    // this.getGeoVolumes();
+  }
+
+  getVisibleExtent(){
+    let camera = this.itownsView.camera.camera3D;
+    var raycaster = new THREE.Raycaster();
+    var plane = new THREE.Plane( new THREE.Vector3( 0, 0, 1 ), 0 );
+
+    //Compute ray from the bottom left corner of the camera to the ground
+    raycaster.setFromCamera( new THREE.Vector2(-1,-1), camera );
+    var min = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, min);
+
+    //Compute ray from the top right corner of the camera to the ground
+    raycaster.setFromCamera( new THREE.Vector2(1,1), camera );
+    var max = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, max);
+    max.setZ(camera.position.z);
+
+    return [min,max]; 
   }
 
   getGeovolumesFromExtent(){
-    let camera = this.itownsView.camera.camera3D;
-    let position = camera.position;
-    console.log(camera);
+    let extent = this.getVisibleExtent();
+    let EPSG = this.itownsView.referenceCrs;
+    this.getGeoVolumes(extent,EPSG);
+
   }
 
   getGeovolumeInCollectionById(id) {
@@ -60,11 +77,12 @@ export class GeoVolumeSource extends Source {
     return false;
   }
 
-  loadCollection() {
+  getGeoVolumes(extent = null,EPSG = null) {
+    let url = this.buildUrl(extent,EPSG);
     return new Promise((resolve, reject) => {
       jquery.ajax({
         type: 'GET',
-        url: this.url,
+        url: url,
         success: (data) => {
           for (let el of data) {
             this.collection.push(new GeoVolume(el));
@@ -80,42 +98,16 @@ export class GeoVolumeSource extends Source {
     });
   }
 
-  loadData(geoVolume, extent = null) {
-    let dataUrl = this.buildDataUrl(geoVolume, extent);
-    // jquery.ajax({
-    //   type: 'GET',
-    //   url: this.url,
-    //   async: false,
-    //   success: (data) => {
-    //     for(let el of data){
-    //       this.collections.push(new GeoVolume(el));
-    //     }
-    //   }
-    // });
+  buildUrl(extent = null,EPSG = null) {
+    return extent ? this.url + "?bbox=" + this.extentToUrl(extent) + "&EPSG=" + EPSG : this.url;
   }
 
-  buildDataUrl(geoVolume, extent = null) {
-    let buildUrl = geoVolume;
-    buildUrl += extent ? this.urlFromExtent(extent) : '';
-    console.log(buildUrl);
-  }
-
-  urlFromExtent(extent) {
-    if (extent) {
-      let url =
-        '?bbox=' +
-        extent.west +
-        ',' +
-        extent.east +
-        ',' +
-        extent.south +
-        ',' +
-        extent.north;
-      if (extent.crs) url += '&crs=' + extent.crs;
-      return url;
-    }
-    throw new Error(
-      'extent is not defined in urlFromExtent() from GeoVolumeSouce'
-    );
+  extentToUrl(extent) {
+    return extent[0].x.toString() + "," +
+            extent[0].y.toString() + "," +
+            extent[0].z.toString() + "," +
+            extent[1].x.toString() + "," +
+            extent[1].y.toString() + "," +
+            extent[1].z.toString();
   }
 }
