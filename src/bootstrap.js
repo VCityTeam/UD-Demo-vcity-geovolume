@@ -2,9 +2,9 @@
 
 import * as udviz from 'ud-viz';
 import { TilesManager } from 'ud-viz/src/Components/Components';
-import { IfcAttributeModule } from './Extensions/IfcAttributeModule/IfcAttributeModule';
-import { GeoVolumeSource } from './Extensions/GeoVolumeModule/GeoVolume/GeoVolumeSource';
-
+import { IfcAttributeModule } from './Extensions/IfcAttributeWidget/IfcAttributeModule';
+import { GeoVolumeSource } from './Extensions/GeoVolumeWidget/GeoVolume/GeoVolumeSource';
+import { GeoVolumeWindow } from './Extensions/GeoVolumeWidget/GeoVolumeWindow';
 
 const app = new udviz.Templates.AllWidget();
 
@@ -132,4 +132,8 @@ app.start('../assets/config/config.json').then((config) => {
     url: 'http://localhost:3000/collections/',
   },
   app.view);
+
+  const geoVolumeWindow = new GeoVolumeWindow(geoVolumeSource,app.view);
+  app.addModuleView('geoVolume',geoVolumeWindow);
+
 });

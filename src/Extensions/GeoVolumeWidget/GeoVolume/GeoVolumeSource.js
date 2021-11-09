@@ -5,9 +5,9 @@ import { MAIN_LOOP_EVENTS } from 'itowns';
 import { GeoVolume } from './GeoVolume';
 
 /**
- * const geoVolumeSource = new GeoVolumesource({
+ * const GeoVolumeSource = new GeoVolumeSource({
  *     url: 'http://dummy.fr/',
- *     crs: 'EPSG:4326',
+ *     crs: 'crs:4326',
  *     extent: {
  *         west: 4.568,
  *         east: 5.18,
@@ -21,7 +21,7 @@ import { GeoVolume } from './GeoVolume';
 export class GeoVolumeSource extends Source {
   /**
    * @param {Object} source - An object that can contain all properties of a
-   * geoVolumeSource and {@link Source}.
+   * GeoVolumeSource and {@link Source}.
    *
    * @constructor
    */
@@ -31,16 +31,22 @@ export class GeoVolumeSource extends Source {
     this.isGeoVolumeSource = true;
     this.itownsView = itownsView;
     this.url = `${source.url}`;
-    console.log(itownsView);
-    setTimeout(() => {  this.getGeovolumesFromExtent(); }, 2000);
-
-
     /**
-     * Array of geovolumes
+     * Array of GeoVolume
      */
     this.collection = new Array();
+  }
 
-    // this.getGeoVolumes();
+  get Collections(){
+    return this.collection;
+  }
+
+  getgeoVolumeWith3DTilesFromCollection(){
+    let geoVolumes = new Array();
+    for (let geoVolume of this.collection){
+      geoVolumes.push(geoVolume.getGeoVolumesWith3DTiles());
+    }
+    return geoVolumes;
   }
 
   getVisibleExtent(){
@@ -58,36 +64,36 @@ export class GeoVolumeSource extends Source {
     var max = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane, max);
     max.setZ(camera.position.z);
-
+    console.log(min,max);
     return [min,max]; 
   }
 
-  getGeovolumesFromExtent(){
+  getgeoVolumesFromExtent(){
     let extent = this.getVisibleExtent();
-    let EPSG = this.itownsView.referenceCrs;
-    this.getGeoVolumes(extent,EPSG);
-
+    let crs = this.itownsView.referenceCrs;
+    return this.getgeoVolumes(extent,crs);
   }
 
-  getGeovolumeInCollectionById(id) {
+  getgeoVolumeInCollectionById(id) {
     for (let geoVolume of this.collection) {
-      if (geoVolume.containGeovolumeById(id))
-        return geoVolume.getGeovolumeById(id);
+      if (geoVolume.containgeoVolumeById(id))
+        return geoVolume.getgeoVolumeById(id);
     }
     return false;
   }
 
-  getGeoVolumes(extent = null,EPSG = null) {
-    let url = this.buildUrl(extent,EPSG);
+  getgeoVolumes(extent = null,crs = null) {
+    let url = this.buildUrl(extent,crs);
+    console.log(url);
     return new Promise((resolve, reject) => {
       jquery.ajax({
         type: 'GET',
         url: url,
         success: (data) => {
+          this.collection = new Array();
           for (let el of data) {
             this.collection.push(new GeoVolume(el));
           }
-          console.log(this.collection);
           resolve();
         },
         error: (e) => {
@@ -98,16 +104,16 @@ export class GeoVolumeSource extends Source {
     });
   }
 
-  buildUrl(extent = null,EPSG = null) {
-    return extent ? this.url + "?bbox=" + this.extentToUrl(extent) + "&EPSG=" + EPSG : this.url;
+  buildUrl(extent = null,crs = null) {
+    return extent ? this.url + '?bbox=' + this.extentToUrl(extent) + '&crs=' + crs : this.url;
   }
 
   extentToUrl(extent) {
-    return extent[0].x.toString() + "," +
-            extent[0].y.toString() + "," +
-            extent[0].z.toString() + "," +
-            extent[1].x.toString() + "," +
-            extent[1].y.toString() + "," +
+    return extent[0].x.toString() + ',' +
+            extent[0].y.toString() + ',' +
+            extent[0].z.toString() + ',' +
+            extent[1].x.toString() + ',' +
+            extent[1].y.toString() + ',' +
             extent[1].z.toString();
   }
 }
