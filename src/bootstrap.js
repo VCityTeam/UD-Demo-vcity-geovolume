@@ -133,7 +133,7 @@ app.start('../assets/config/config.json').then((config) => {
   },
   app.view);
 
-  const geoVolumeWindow = new GeoVolumeWindow(geoVolumeSource,app.view);
+  const geoVolumeWindow = new GeoVolumeWindow(geoVolumeSource,app);
   app.addModuleView('geoVolume',geoVolumeWindow);
 
 });

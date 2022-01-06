@@ -64,7 +64,6 @@ export class GeoVolumeSource extends Source {
     var max = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane, max);
     max.setZ(camera.position.z);
-    console.log(min,max);
     return [min,max]; 
   }
 
@@ -84,7 +83,6 @@ export class GeoVolumeSource extends Source {
 
   getgeoVolumes(extent = null,crs = null) {
     let url = this.buildUrl(extent,crs);
-    console.log(url);
     return new Promise((resolve, reject) => {
       jquery.ajax({
         type: 'GET',

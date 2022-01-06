@@ -20,7 +20,9 @@
     "timsort": "0.3.0",
     "ud-viz": "2.33.4",
     "uuid": "8.3.2",
-    "vis-util": "5.0.2"
+    "vis-util": "5.0.2",
+    "proj4": "^2.7.5",
+    "box-intersect": "^1.0.2"
   },
   "devDependencies": {
     "child-process-promise": "^2.2.1",

@@ -1,10 +1,11 @@
 import { Widgets } from 'ud-viz';
 
 export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
-  constructor(geoVolumeSource, itownsView) {
+  constructor(geoVolumeSource, allWidget) {
     super('sparqlQueryWindow', 'GeoVolume');
     this.geoVolumeSource = geoVolumeSource;
-    this.view = itownsView;
+    this.view = allWidget.view;
+    this.app = allWidget;
   }
 
   get innerContentHtml() {
@@ -15,11 +16,20 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     <div class ="box-section" id="${this.geoVolumeDivId}"> 
       <label for="geometry-layers-spoiler" class="section-title">Available GeoVolume</Label>
       <div class="spoiler-box">
-        <ul id= "${this.geoVolumeListId}">
-        </ul>
+        <ol id= "${this.geoVolumeListId}">
+        </ol>
       </div>
     </div>
     `;
+  }
+
+  visualizeContent(geovolume,content){
+    console.log(content);
+    content.url = content.href;
+    content.id = geovolume.id + '_' + content.title;
+    var itownsLayer = this.app.setup3DTilesLayer(content);
+    this.app.add3DTilesLayer(itownsLayer[0]);
+    this.app.update3DView();
   }
 
   writeGeoVolume(geovolume, htmlParent) {
@@ -32,23 +42,30 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
           linkToSelf = link.href;
         }
       }
-      var innerHTML = '<a href="' + linkToSelf + '">' + geovolume.id + '</a>';
+      li.innerHTML = '<a href="' + linkToSelf + '">' + geovolume.id + '</a>';
+      
       if (geovolume.content.length > 0) {
-        innerHTML += '<br>    Representations : ';
-        innerHTML += '<ul> ';
+        li.innerHTML += '<br>    Representations : ';
+
+        var representationsList = document.createElement('ul');
         for (let c of geovolume.content) {
-          innerHTML +=
-            '<li>' +
-            c.title +
+          var representationEl = document.createElement('li');
+          representationEl.innerHTML = c.title +
             ' : <a href="' +
             c.href +
-            '">' +
-            c.type +
-            '</a></li>';
+            '"></a>' +
+            c.type;
+          if(c.type.includes('3dtiles')){
+            var visualisator = document.createElement('a');
+            visualisator.id = `${geovolume.id}_${c.title}`;
+            visualisator.innerHTML = '<img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+            visualisator.onclick = () => {this.visualizeContent(geovolume,c);};
+            representationEl.append(visualisator);
+          }
+          representationsList.appendChild(representationEl);   
         }
-        innerHTML += '</ul> ';
+        li.appendChild(representationsList);
       }
-      li.innerHTML = innerHTML;
       if (geovolume.children.length > 0) {
         var ol = document.createElement('ol');
         for (let child of geovolume.children) {
@@ -62,6 +79,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
 
   displayCollections() {
     if (this.geoVolumeSource.Collections) {
+      console.log(this.geoVolumeSource.Collections);
       let list = this.geoVolumeListElement;
       list.innerHTML = '';
       this.writeGeoVolume(this.geoVolumeSource.Collections[0], list);
