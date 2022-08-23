@@ -1,5 +1,6 @@
 import {boxIntersect} from  'box-intersect';
 import * as proj4 from 'proj4';
+import * as THREE from 'three';
 
 export class GeoVolume {
   constructor(jsonObject) {
@@ -7,15 +8,39 @@ export class GeoVolume {
     this.title = jsonObject.title;
     this.collectionType = jsonObject.collectionType;
     this.extent = jsonObject.extent;
+    this.centroid = this.getCentroid();
     this.links = jsonObject.links;
     this.content = jsonObject.content;
     this.children = this.fillChildren(jsonObject.children);
+    this.bboxGeom = null;
   }
 
   isExtentInstersectingWithBbox(bbox, crs) {
     let bboxReprojected = this.reprojectBbox(bbox,crs);
     let extentBbox = this.extent.spatial.bbox;
     return boxIntersect([bboxReprojected,extentBbox]).length > 0;
+  }
+
+  getCentroid(){
+    let bbox = this.extent.spatial.bbox;
+    return [
+      (bbox[0] + bbox[3]) / 2,
+      (bbox[1] + bbox[4]) / 2,
+      (bbox[2] + bbox[5]) / 2
+    ];
+  }
+
+  displayBbox(threeScene) {
+    if(this.id == "batiment_carl"){
+      let bbox = this.extent.spatial.bbox;
+      var geom = new THREE.BoxGeometry( bbox[3] - bbox[0], bbox[1] - bbox[4],bbox[2] - bbox[5]);
+      var cube = new THREE.Mesh(geom);
+      cube.position.set(this.centroid[0],this.centroid[1],this.centroid[2]);
+
+      cube.updateMatrixWorld();
+      threeScene.add(cube);
+      this.bboxGeom = cube;
+    }
   }
 
   reprojectBbox(bbox,crs){

@@ -58,7 +58,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
           if(c.type.includes('3dtiles')){
             var visualisator = document.createElement('a');
             visualisator.id = `${geovolume.id}_${c.title}`;
-            visualisator.innerHTML = '<img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+            visualisator.innerHTML = ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
             visualisator.onclick = () => {this.visualizeContent(geovolume,c);};
             representationEl.append(visualisator);
           }
@@ -77,7 +77,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     }
   }
 
-  displayCollections() {
+  displayCollectionsInHTML() {
     if (this.geoVolumeSource.Collections) {
       console.log(this.geoVolumeSource.Collections);
       let list = this.geoVolumeListElement;
@@ -86,16 +86,30 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     }
   }
 
+  displayCollectionsInScene(geoVolume){
+    geoVolume.displayBbox(this.view.scene);
+    if (geoVolume.children.length > 0) {
+      for (let child of geoVolume.children) {
+        this.displayCollectionsInScene(child);
+        this.app.update3DView();
+      }
+    }
+  }
+
+
   windowCreated() {
     this.getCollectionsButtonIdElement.onclick = () => {
       this.geoVolumeSource.getgeoVolumes().then(() => {
-        this.displayCollections();
+        this.displayCollectionsInHTML();
+        this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
       });
     };
 
     this.getCollectionsByExtentButtonIdElement.onclick = () => {
       this.geoVolumeSource.getgeoVolumesFromExtent().then(() => {
-        this.displayCollections();
+        this.displayCollectionsInHTML();
+        console.log(this.geoVolumeSource.Collections);
+        this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
       });
     };
   }
