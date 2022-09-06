@@ -1,11 +1,31 @@
-import { Widgets } from 'ud-viz';
+import { Widgets,Components,itowns,THREE } from 'ud-viz';
 
 export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   constructor(geoVolumeSource, allWidget) {
     super('sparqlQueryWindow', 'GeoVolume');
     this.geoVolumeSource = geoVolumeSource;
-    this.view = allWidget.view;
+    this.view = allWidget.view3D.getItownsView();
     this.app = allWidget;
+
+
+    let clickListener = (event) => {
+      this.onMouseClick(event);
+    };
+    this.app.viewerDivElement.addEventListener('mousedown', clickListener);
+    this.bboxGeomOfGeovolumes = new Array();
+  }
+
+  onMouseClick(event){
+    event.preventDefault(); 
+
+    let raycaster =  new THREE.Raycaster();
+    let mouse3D = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1,   
+      -( event.clientY / window.innerHeight ) * 2 + 1,  
+      0.5);     
+    raycaster.setFromCamera( mouse3D, this.view.camera.camera3D );
+    console.log(raycaster);
+    let intersects = raycaster.intersectObjects( this.bboxGeomOfGeovolumes,true);
+    console.log(intersects);
   }
 
   get innerContentHtml() {
@@ -24,12 +44,11 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   }
 
   visualizeContent(geovolume,content){
-    console.log(content);
     content.url = content.href;
     content.id = geovolume.id + '_' + content.title;
-    var itownsLayer = this.app.setup3DTilesLayer(content);
-    this.app.add3DTilesLayer(itownsLayer[0]);
-    this.app.update3DView();
+    var itownsLayer = Components.setup3DTilesLayer(content,this.app.view3D.layerManager,this.view);
+    console.log(itownsLayer);
+    itowns.View.prototype.addLayer.call(this.view,itownsLayer);
   }
 
   writeGeoVolume(geovolume, htmlParent) {
@@ -42,8 +61,17 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
           linkToSelf = link.href;
         }
       }
-      li.innerHTML = '<a href="' + linkToSelf + '">' + geovolume.id + '</a>';
+      var a = document.createElement('a');
+      a.href = linkToSelf;
+      a.innerText = geovolume.id;
+      li.appendChild(a);
       
+      // var addBboxButton = document.createElement('a');
+      // addBboxButton.id = geovolume.id + "_show_bbox";
+      // addBboxButton.innerHTML = '<img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+      // addBboxButton.onclick = () => {geovolume.displayBbox(this.view.scene);};
+      // li.appendChild(addBboxButton);
+
       if (geovolume.content.length > 0) {
         li.innerHTML += '<br>    Representations : ';
 
@@ -88,6 +116,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
 
   displayCollectionsInScene(geoVolume){
     geoVolume.displayBbox(this.view.scene);
+    this.bboxGeomOfGeovolumes.push(geoVolume.bboxGeom);
     if (geoVolume.children.length > 0) {
       for (let child of geoVolume.children) {
         this.displayCollectionsInScene(child);
@@ -95,7 +124,6 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
       }
     }
   }
-
 
   windowCreated() {
     this.getCollectionsButtonIdElement.onclick = () => {
@@ -108,8 +136,8 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     this.getCollectionsByExtentButtonIdElement.onclick = () => {
       this.geoVolumeSource.getgeoVolumesFromExtent().then(() => {
         this.displayCollectionsInHTML();
-        console.log(this.geoVolumeSource.Collections);
-        this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
+        // console.log(this.geoVolumeSource.Collections);
+        // this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
       });
     };
   }

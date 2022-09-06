@@ -1,7 +1,4 @@
-import { Source } from 'itowns';
-import {THREE}  from 'ud-viz';
-import * as jquery from 'jquery';
-import { MAIN_LOOP_EVENTS } from 'itowns';
+import {THREE,itowns,jquery}  from 'ud-viz';
 import { GeoVolume } from './GeoVolume';
 
 /**
@@ -18,7 +15,7 @@ import { GeoVolume } from './GeoVolume';
  * });
  */
 
-export class GeoVolumeSource extends Source {
+export class GeoVolumeSource extends itowns.Source {
   /**
    * @param {Object} source - An object that can contain all properties of a
    * GeoVolumeSource and {@link Source}.
