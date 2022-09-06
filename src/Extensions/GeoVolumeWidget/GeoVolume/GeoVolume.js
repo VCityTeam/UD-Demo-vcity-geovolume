@@ -44,11 +44,11 @@ export class GeoVolume {
     var cube = new THREE.Mesh(geom);
     console.log(cube);
     cube.material.wireframe = true;
-    cube.material.wireframeLinewidth = 20;
+    cube.material.wireframeLinewidth = 100;
     // cube.material.transparent = true;
     // cube.material.opacity = 0.5;
 
-    cube.material.color.setHex(Math.random() * 0xffffff);
+    cube.material.color.setHex(0x000000);
     cube.position.set(this.centroid[0], this.centroid[1], this.centroid[2]);
 
     cube.updateMatrixWorld();
