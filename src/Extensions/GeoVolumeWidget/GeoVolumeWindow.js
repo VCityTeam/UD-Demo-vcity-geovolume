@@ -2,29 +2,21 @@ import { Widgets,Components,itowns,THREE } from 'ud-viz';
 
 export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   constructor(geoVolumeSource, allWidget) {
-    super('sparqlQueryWindow', 'GeoVolume');
+    super('sparqlQueryWindow', 'GeoVolume',false);
     this.geoVolumeSource = geoVolumeSource;
     this.view = allWidget.view3D.getItownsView();
     this.app = allWidget;
-
-
-    let clickListener = (event) => {
-      this.onMouseClick(event);
-    };
-    this.app.viewerDivElement.addEventListener('mousedown', clickListener);
     this.bboxGeomOfGeovolumes = new Array();
   }
 
   onMouseClick(event){
     event.preventDefault(); 
-
     let raycaster =  new THREE.Raycaster();
-    let mouse3D = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1,   
-      -( event.clientY / window.innerHeight ) * 2 + 1,  
-      0.5);     
+    let mouse3D = new THREE.Vector2( (event.layerX / this.app.view3D.rootWebGL.offsetWidth * 2.0) - 1,   
+      -( event.layerY / this.app.view3D.rootWebGL.offsetHeight) * 2 + 1);     
+      
     raycaster.setFromCamera( mouse3D, this.view.camera.camera3D );
-    console.log(raycaster);
-    let intersects = raycaster.intersectObjects( this.bboxGeomOfGeovolumes,true);
+    let intersects = raycaster.intersectObjects( this.bboxGeomOfGeovolumes);
     console.log(intersects);
   }
 
@@ -44,11 +36,26 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   }
 
   visualizeContent(geovolume,content){
-    content.url = content.href;
-    content.id = geovolume.id + '_' + content.title;
-    var itownsLayer = Components.setup3DTilesLayer(content,this.app.view3D.layerManager,this.view);
-    console.log(itownsLayer);
-    itowns.View.prototype.addLayer.call(this.view,itownsLayer);
+    if(content.url == undefined)
+      content.url = content.href;
+    if(content.id == undefined)
+      content.id = geovolume.id + '_' + content.title;
+    if(this.app.view3D.itownsView.getLayerById(content.id) == undefined){
+      var itownsLayer = Components.setup3DTilesLayer(content,this.app.view3D.layerManager,this.view);
+      itowns.View.prototype.addLayer.call(this.view,itownsLayer);
+      var visualisator = document.getElementById(geovolume.id);
+      visualisator.innerHTML = ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+      visualisator.onclick = () => {this.deleteContent(geovolume,content);};
+    }
+  }
+
+  deleteContent(geovolume,content){
+    if(this.app.view3D.itownsView.getLayerById(content.id) != undefined){
+      this.app.view3D.layerManager.removeLayerByLayerID(content.id);
+      var visualisator = document.getElementById(geovolume.id);
+      visualisator.innerHTML = ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+      visualisator.onclick = () => {this.visualizeContent(geovolume,content);};
+    }
   }
 
   writeGeoVolume(geovolume, htmlParent) {
@@ -65,12 +72,6 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
       a.href = linkToSelf;
       a.innerText = geovolume.id;
       li.appendChild(a);
-      
-      // var addBboxButton = document.createElement('a');
-      // addBboxButton.id = geovolume.id + "_show_bbox";
-      // addBboxButton.innerHTML = '<img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
-      // addBboxButton.onclick = () => {geovolume.displayBbox(this.view.scene);};
-      // li.appendChild(addBboxButton);
 
       if (geovolume.content.length > 0) {
         li.innerHTML += '<br>    Representations : ';
@@ -85,10 +86,17 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
             c.type;
           if(c.type.includes('3dtiles')){
             var visualisator = document.createElement('a');
-            visualisator.id = `${geovolume.id}_${c.title}`;
+            visualisator.id = `${geovolume.id}`;
+            if(this.app.view3D.itownsView.getLayerById(geovolume.id + '_' + c.title) == undefined){
             visualisator.innerHTML = ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
             visualisator.onclick = () => {this.visualizeContent(geovolume,c);};
             representationEl.append(visualisator);
+            }
+            else{
+              this.app.view3D.layerManager.removeLayerByLayerID(geovolume.id + '_' + c.title);
+              visualisator.innerHTML = ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+              visualisator.onclick = () => {this.visualizeContent(geovolume,c);};
+            }
           }
           representationsList.appendChild(representationEl);   
         }
@@ -126,8 +134,13 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   }
 
   windowCreated() {
+    this.clickListener = (event) => {
+      this.onMouseClick(event);
+    };
+    this.app.viewerDivElement.addEventListener('mousedown', this.clickListener);
     this.getCollectionsButtonIdElement.onclick = () => {
       this.geoVolumeSource.getgeoVolumes().then(() => {
+        this.deleteBboxGeomOfGeovolumes();
         this.displayCollectionsInHTML();
         this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
       });
@@ -135,12 +148,25 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
 
     this.getCollectionsByExtentButtonIdElement.onclick = () => {
       this.geoVolumeSource.getgeoVolumesFromExtent().then(() => {
+        this.deleteBboxGeomOfGeovolumes();
         this.displayCollectionsInHTML();
-        // console.log(this.geoVolumeSource.Collections);
-        // this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
+        this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
       });
     };
   }
+
+  deleteBboxGeomOfGeovolumes(){
+    for(let bbox of this.bboxGeomOfGeovolumes){
+      this.view.scene.remove(bbox);
+    }
+  }
+
+  windowDestroyed() {
+    this.app.viewerDivElement.removeEventListener('mousedown',this.clickListener);
+    this.deleteBboxGeomOfGeovolumes();
+    this.app.update3DView();
+  }
+
 
   get getCollectionsButtonId() {
     return `${this.windowId}_get_collections_button`;

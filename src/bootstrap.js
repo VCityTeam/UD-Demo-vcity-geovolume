@@ -15,7 +15,6 @@ proj4.defs(
 
 app.start('../assets/config/config.json').then((config) => {
 
-
   ////// LAYER CHOICE MODULE
   const layerChoice = new udviz.Widgets.LayerChoice(app.view3D.layerManager);
   app.addModuleView('layerChoice', layerChoice);
@@ -46,7 +45,7 @@ app.start('../assets/config/config.json').then((config) => {
     name: 'geoVolumeSource',
     url: 'http://localhost:3000/collections/',
   },
-  app.view);
+  app.view3D.itownsView);
 
   const geoVolumeWindow = new GeoVolumeWindow(geoVolumeSource,app);
   app.addModuleView('geoVolume',geoVolumeWindow);
