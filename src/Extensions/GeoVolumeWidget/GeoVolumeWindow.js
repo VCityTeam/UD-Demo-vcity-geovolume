@@ -22,28 +22,25 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
 
   get innerContentHtml() {
     return /*html*/ `
-    
-    <input type="button" value="Get Collections" id="${this.getCollectionsButtonId}">
-    <input type="button" value="Get Collections by current extent"id="${this.getCollectionsByExtentButtonId}">
-    <div class ="box-section" id="${this.geoVolumeDivId}"> 
-      <label for="geometry-layers-spoiler" class="section-title">Available GeoVolume</Label>
-      <div class="spoiler-box">
-        <ol id= "${this.geoVolumeListId}">
-        </ol>
+    <div class="box-section">
+      <div class ="box-section" id="${this.geoVolumeDivId}"> 
+        <label for="geometry-layers-spoiler" class="section-title">Available GeoVolume</Label>
+        <div class="spoiler-box">
+          <ol id= "${this.geoVolumeListId}">
+          </ol>
+        </div>
       </div>
-    </div>
+    <div>
     `;
   }
 
   visualizeContent(geovolume,content){
     if(content.url == undefined)
       content.url = content.href;
-    if(content.id == undefined)
-      content.id = geovolume.id + '_' + content.title;
     if(this.app.view3D.itownsView.getLayerById(content.id) == undefined){
       var itownsLayer = Components.setup3DTilesLayer(content,this.app.view3D.layerManager,this.view);
       itowns.View.prototype.addLayer.call(this.view,itownsLayer);
-      var visualisator = document.getElementById(geovolume.id);
+      var visualisator = document.getElementById(content.id);
       visualisator.innerHTML = ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
       visualisator.onclick = () => {this.deleteContent(geovolume,content);};
     }
@@ -52,7 +49,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   deleteContent(geovolume,content){
     if(this.app.view3D.itownsView.getLayerById(content.id) != undefined){
       this.app.view3D.layerManager.removeLayerByLayerID(content.id);
-      var visualisator = document.getElementById(geovolume.id);
+      var visualisator = document.getElementById(content.id);
       visualisator.innerHTML = ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
       visualisator.onclick = () => {this.visualizeContent(geovolume,content);};
     }
@@ -86,17 +83,17 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
             c.type;
           if(c.type.includes('3dtiles')){
             var visualisator = document.createElement('a');
-            visualisator.id = `${geovolume.id}`;
-            if(this.app.view3D.itownsView.getLayerById(geovolume.id + '_' + c.title) == undefined){
-            visualisator.innerHTML = ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
-            visualisator.onclick = () => {this.visualizeContent(geovolume,c);};
-            representationEl.append(visualisator);
-            }
-            else{
-              this.app.view3D.layerManager.removeLayerByLayerID(geovolume.id + '_' + c.title);
+            visualisator.id = `${geovolume.id + '_' + c.title}`;
+            c.id = geovolume.id + '_' + c.title;
+            if(this.app.view3D.itownsView.getLayerById(c.id) == undefined){
               visualisator.innerHTML = ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
               visualisator.onclick = () => {this.visualizeContent(geovolume,c);};
             }
+            else{
+              visualisator.innerHTML = ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+              visualisator.onclick = () => {this.deleteContent(geovolume,c);};
+            }
+            representationEl.append(visualisator);
           }
           representationsList.appendChild(representationEl);   
         }
@@ -115,44 +112,49 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
 
   displayCollectionsInHTML() {
     if (this.geoVolumeSource.Collections) {
-      console.log(this.geoVolumeSource.Collections);
       let list = this.geoVolumeListElement;
       list.innerHTML = '';
-      this.writeGeoVolume(this.geoVolumeSource.Collections[0], list);
+      for(let geoVolume of this.geoVolumeSource.Collections)
+        this.writeGeoVolume(geoVolume, list);
     }
   }
 
-  displayCollectionsInScene(geoVolume){
+  displayGeoVolumeInScene(geoVolume){
     geoVolume.displayBbox(this.view.scene);
     this.bboxGeomOfGeovolumes.push(geoVolume.bboxGeom);
     if (geoVolume.children.length > 0) {
       for (let child of geoVolume.children) {
         this.displayCollectionsInScene(child);
-        this.app.update3DView();
       }
     }
+    this.app.update3DView();
+  }
+
+  displayCollectionsInScene(){
+    for(let geoVolume of this.geoVolumeSource.Collections)
+      this.displayGeoVolumeInScene(geoVolume);
   }
 
   windowCreated() {
-    this.clickListener = (event) => {
-      this.onMouseClick(event);
-    };
-    this.app.viewerDivElement.addEventListener('mousedown', this.clickListener);
-    this.getCollectionsButtonIdElement.onclick = () => {
-      this.geoVolumeSource.getgeoVolumes().then(() => {
-        this.deleteBboxGeomOfGeovolumes();
-        this.displayCollectionsInHTML();
-        this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
-      });
-    };
+    // this.clickListener = (event) => {
+    //   this.onMouseClick(event);
+    // };
+    // this.app.viewerDivElement.addEventListener('mousedown', this.clickListener);
+    // this.getCollectionsButtonIdElement.onclick = () => {
+    this.geoVolumeSource.getgeoVolumes().then(() => {
+      this.deleteBboxGeomOfGeovolumes();
+      this.displayCollectionsInHTML();
+      this.displayCollectionsInScene();
+    });
+    // };
 
-    this.getCollectionsByExtentButtonIdElement.onclick = () => {
-      this.geoVolumeSource.getgeoVolumesFromExtent().then(() => {
-        this.deleteBboxGeomOfGeovolumes();
-        this.displayCollectionsInHTML();
-        this.displayCollectionsInScene(this.geoVolumeSource.Collections[0]);
-      });
-    };
+  //   this.getCollectionsByExtentButtonIdElement.onclick = () => {
+  //     this.geoVolumeSource.getgeoVolumesFromExtent().then(() => {
+  //       this.deleteBboxGeomOfGeovolumes();
+  //       this.displayCollectionsInHTML();
+  //       this.displayCollectionsInScene();
+  //     });
+  //   };
   }
 
   deleteBboxGeomOfGeovolumes(){

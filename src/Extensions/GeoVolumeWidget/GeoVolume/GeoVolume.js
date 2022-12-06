@@ -39,19 +39,20 @@ export class GeoVolume {
     var geom = new THREE.BoxGeometry(
       bbox[3] - bbox[0],
       bbox[1] - bbox[4],
-      bbox[2] - bbox[5]
+      bbox[2] - bbox[5],
+      1,
+      1,
+      1
     );
     var cube = new THREE.Mesh(geom);
-    console.log(cube);
     cube.material.wireframe = true;
     cube.material.wireframeLinewidth = 100;
-    // cube.material.transparent = true;
-    // cube.material.opacity = 0.5;
-
     cube.material.color.setHex(0x000000);
-    cube.position.set(this.centroid[0], this.centroid[1], this.centroid[2]);
+    // cube.material.color.setHex(Math.random() * 0xffffff);
 
+    cube.position.set(this.centroid[0], this.centroid[1], this.centroid[2]);
     cube.updateMatrixWorld();
+
     cube.geoVolume = this;
     threeScene.add(cube);
     this.bboxGeom = cube;
