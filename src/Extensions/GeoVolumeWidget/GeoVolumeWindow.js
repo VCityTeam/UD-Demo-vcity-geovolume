@@ -1,8 +1,8 @@
 import { Widgets,Components,itowns,THREE } from 'ud-viz';
-
+import { SensorExtension } from '../Sensor/SensorExtension';
 export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   constructor(geoVolumeSource, allWidget) {
-    super('sparqlQueryWindow', 'GeoVolume',false);
+    super('geovolumeWindow', 'GeoVolume',false);
     this.geoVolumeSource = geoVolumeSource;
     this.view = allWidget.view3D.getItownsView();
     this.app = allWidget;
@@ -94,6 +94,9 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
               visualisator.onclick = () => {this.deleteContent(geovolume,c);};
             }
             representationEl.append(visualisator);
+          }
+          if(c.type.includes('sensor')){
+            new SensorExtension(this,representationEl);
           }
           representationsList.appendChild(representationEl);   
         }

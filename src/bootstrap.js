@@ -4,6 +4,7 @@ import * as udviz from 'ud-viz';
 import proj4 from 'proj4';
 import { GeoVolumeSource } from './Extensions/GeoVolumeWidget/GeoVolume/GeoVolumeSource';
 import { GeoVolumeWindow } from './Extensions/GeoVolumeWidget/GeoVolumeWindow';
+import { SensorExtension } from './Extensions/Sensor/SensorExtension';
 
 const app = new udviz.Templates.AllWidget();
 
