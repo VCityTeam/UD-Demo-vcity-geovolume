@@ -23,7 +23,8 @@
     "timsort": "0.3.0",
     "ud-viz": "file:../UD-Viz/UD-Viz",
     "uuid": "8.3.2",
-    "vis-util": "5.0.2"
+    "vis-util": "5.0.2",
+    "d3":"^7.7.0"
   },
   "devDependencies": {
     "child-process-promise": "^2.2.1",

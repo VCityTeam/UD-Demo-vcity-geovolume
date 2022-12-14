@@ -1,5 +1,5 @@
 import {THREE,itowns,jquery}  from 'ud-viz';
-import { GeoVolume } from './GeoVolume';
+import { GeoVolume } from '../Model/GeoVolume';
 
 /**
  * const GeoVolumeSource = new GeoVolumeSource({
@@ -17,8 +17,8 @@ import { GeoVolume } from './GeoVolume';
 
 export class GeoVolumeSource extends itowns.Source {
   /**
-   * @param {Object} source - An object that can contain all properties of a
-   * GeoVolumeSource and {@link Source}.
+   * @param {Object} source - An object that can contain the url of a GeoVolume API.
+   * @param {Object} itownsView
    *
    * @constructor
    */
@@ -72,8 +72,8 @@ export class GeoVolumeSource extends itowns.Source {
 
   getgeoVolumeInCollectionById(id) {
     for (let geoVolume of this.collection) {
-      if (geoVolume.containgeoVolumeById(id))
-        return geoVolume.getgeoVolumeById(id);
+      if (geoVolume.containGeovolumeById(id))
+        return geoVolume.getGeovolumeById(id);
     }
     return false;
   }

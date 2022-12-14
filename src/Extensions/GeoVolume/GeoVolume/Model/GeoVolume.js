@@ -101,7 +101,6 @@ export class GeoVolume {
       for (let c of this.content) {
         if (c.type.includes(type)) content.push(c);
       }
-      console.log(content);
       return content;
     } else return this.content;
   }
@@ -118,6 +117,14 @@ export class GeoVolume {
     if (this.id == id) return this;
     for (let child of this.children) {
       return child.getGeovolumeById(id);
+    }
+    return false;
+  }
+
+  getContentByTitle(title){
+    for (let c of this.content) {
+      if(c.title == title)
+        return c;
     }
     return false;
   }

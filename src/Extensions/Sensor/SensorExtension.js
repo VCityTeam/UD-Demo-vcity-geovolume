@@ -1,20 +1,28 @@
 import { Widgets } from "ud-viz";
+import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
 import { SensorWindow } from "./SensorWindow";
 
 export class SensorExtension extends Widgets.Components.ModuleView {
-  constructor(geoVolumeModule, htmlList) {
+  constructor(geoVolumeModule) {
     super();
     this.geoVolumeModule = geoVolumeModule;
-    this.htmlList = htmlList;
     this.createExtension();
   }
 
   createExtension() {
-    var button = document.createElement("button");
-    button.innerText = "Show sensor Data";
-    button.onclick = () => {
-        this.sensorWindow = new SensorWindow(this.geoVolumeModule.parentElement);
-    };
-    this.htmlList.appendChild(button);
+    this.geoVolumeModule.view.addEventListener(
+      GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED,
+      () => {
+        let div_sensor = document.getElementById(`geoVolume_sensor`);
+        if (div_sensor) {
+          let new_button = document.createElement("button");
+          new_button.innerText = "Sensor Data";
+          new_button.onclick = () => {
+            new SensorWindow(this.geoVolumeModule.view.parentElement);
+          };
+          div_sensor.append(new_button);
+        }
+      }
+    );
   }
 }

@@ -5,8 +5,14 @@
     "logos": ["logo-BL.jpg","logo-liris.png", "logo-univ-lyon.png"]
   },
   "3DTilesLayers": [ 
-
   ],
+  "sparqlModule": {
+    "url": "https://demo.liris.cnrs.fr/vcity/geodatadays/strabon/",
+    "url_parameters": "Query?handle=download&format=SPARQL/JSON&view=HTML&query="
+  },
+  "geoVolumeModule": {
+    "url": "http://localhost:3000/collections/"
+  },
   "server": {
     "url": "http://rict.liris.cnrs.fr:1525/",
     "login": "login",

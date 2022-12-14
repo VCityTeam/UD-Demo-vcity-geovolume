@@ -1,5 +1,5 @@
 import { Widgets,Components,itowns,THREE } from 'ud-viz';
-import { SensorExtension } from '../Sensor/SensorExtension';
+// import { SensorExtension } from '../../../Sensor/SensorExtension';
 export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   constructor(geoVolumeSource, allWidget) {
     super('geovolumeWindow', 'GeoVolume',false);
@@ -7,6 +7,8 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     this.view = allWidget.view3D.getItownsView();
     this.app = allWidget;
     this.bboxGeomOfGeovolumes = new Array();
+
+    this.registerEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
   }
 
   onMouseClick(event){
@@ -31,6 +33,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
         </div>
       </div>
     <div>
+    <div data-ext-container-default="button"></div>
     `;
   }
 
@@ -38,6 +41,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     if(content.url == undefined)
       content.url = content.href;
     if(this.app.view3D.itownsView.getLayerById(content.id) == undefined){
+      content['color'] = "0xFFFFFF";
       var itownsLayer = Components.setup3DTilesLayer(content,this.app.view3D.layerManager,this.view);
       itowns.View.prototype.addLayer.call(this.view,itownsLayer);
       var visualisator = document.getElementById(content.id);
@@ -76,11 +80,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
         var representationsList = document.createElement('ul');
         for (let c of geovolume.content) {
           var representationEl = document.createElement('li');
-          representationEl.innerHTML = c.title +
-            ' : <a href="' +
-            c.href +
-            '"></a>' +
-            c.type;
+          representationEl.innerHTML = c.title + " "; 
           if(c.type.includes('3dtiles')){
             var visualisator = document.createElement('a');
             visualisator.id = `${geovolume.id + '_' + c.title}`;
@@ -95,8 +95,17 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
             }
             representationEl.append(visualisator);
           }
-          if(c.type.includes('sensor')){
-            new SensorExtension(this,representationEl);
+          else if(c.type.includes('sensor')){
+            var sensorDiv = document.createElement('a');
+            sensorDiv.id = `geoVolume_sensor`;
+            representationEl.append(sensorDiv);
+          }
+          else if(c.type.includes('sparql')){
+            var sparqlDiv = document.createElement('a');
+            sparqlDiv.className = `geoVolume_sparql`;
+            sparqlDiv.setAttribute('geoVolumeId',geovolume.id);
+            sparqlDiv.setAttribute('variantId',c.title);
+            representationEl.append(sparqlDiv);
           }
           representationsList.appendChild(representationEl);   
         }
@@ -139,25 +148,12 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   }
 
   windowCreated() {
-    // this.clickListener = (event) => {
-    //   this.onMouseClick(event);
-    // };
-    // this.app.viewerDivElement.addEventListener('mousedown', this.clickListener);
-    // this.getCollectionsButtonIdElement.onclick = () => {
     this.geoVolumeSource.getgeoVolumes().then(() => {
       this.deleteBboxGeomOfGeovolumes();
       this.displayCollectionsInHTML();
       this.displayCollectionsInScene();
+      this.sendEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
     });
-    // };
-
-  //   this.getCollectionsByExtentButtonIdElement.onclick = () => {
-  //     this.geoVolumeSource.getgeoVolumesFromExtent().then(() => {
-  //       this.deleteBboxGeomOfGeovolumes();
-  //       this.displayCollectionsInHTML();
-  //       this.displayCollectionsInScene();
-  //     });
-  //   };
   }
 
   deleteBboxGeomOfGeovolumes(){
@@ -199,5 +195,9 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
 
   get geoVolumeListElement() {
     return document.getElementById(this.geoVolumeListId);
+  }
+
+  static get GEOVOLUME_COLLECTION_UPDATED() {
+    return 'GEOVOLUME_COLLECTION_UPDATED';
   }
 }

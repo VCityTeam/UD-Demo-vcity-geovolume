@@ -1,10 +1,10 @@
 import { Widgets, jquery } from "ud-viz";
 export class SensorWindow extends Widgets.Components.GUI.Window {
   constructor(htmlElement) {
-    super("sensorWindow", "Sensor", true);
+    super("sensorWindow", "Sensor", false);
 
-    this.user;
-    this.password;
+    this.user = "admin";
+    this.password = "CARLSource69";
     this.sensorData = new Object();
     this.training_url = "http://training-iot.bl-predict.research-bl.com:8086";
     this.request_max = `SELECT max("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"='CARL_TAMB_HALL_MOY'`;
@@ -36,15 +36,15 @@ export class SensorWindow extends Widgets.Components.GUI.Window {
     return /*html*/ `
     <div class="box-section" id=${this.sensorDivID}>
         <div class ="box-section" id="meanValue">
-            <div id="${this.meanValueId}">19.5</div>
-            <div id="${this.meanTimeId}">08/12/2022 16h12</div>
+            <div id="${this.meanValueId}">mean : 19.5</div>
+            <div id="${this.meanTimeId}">Last 24h</div>
         </div>
         <div class ="box-section" id="maxValue">
-            <div class id="${this.maxValueId}">20.5</div>
+            <div class id="${this.maxValueId}">max : 20.5</div>
             <div class id="${this.maxTimeId}">08/12/2022 14h12</div>
         </div>
         <div class ="box-section" id="minValue">
-            <div class id="${this.minValueId}">18.5</div>
+            <div class id="${this.minValueId}">min : 18.5</div>
             <div class id="${this.minTimeId}">08/12/2022 3h05</div>
         </div>
     </div>
