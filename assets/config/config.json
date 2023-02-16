@@ -2,7 +2,7 @@
   "assets": {
     "iconFolder": "./assets/icons",
     "imageFolder": "./assets/img",
-    "logos": ["logo-BL.jpg","logo-liris.png", "logo-univ-lyon.png"]
+    "logos": ["logo-BL.jpg","logo-liris.png", "logo-univ-lyon.png","cnrs.png"]
   },
   "3DTilesLayers": [ 
   ],
@@ -39,7 +39,7 @@
       "version": "1.3.0",
       "format": "image/jpeg",
       "layer_name": "Base_Map",
-      "maxSubdivisionLevel": 6
+      "maxSubdivisionLevel": 8
   },
   "elevation_layer": {
     "url": "https://download.data.grandlyon.com/wms/grandlyon",
