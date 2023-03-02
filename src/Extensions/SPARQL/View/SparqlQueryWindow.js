@@ -1,10 +1,10 @@
-import { Window } from 'ud-viz/src/Widgets/Components/GUI/js/Window';
+import { Widget } from '@ud-viz/browser';
 import { SparqlEndpointResponseProvider } from '../ViewModel/SparqlEndpointResponseProvider';
 import { Graph } from '../Model/Graph';
 import { Table } from '../Model/Table';
 import * as URI from '../Model/URI';
 import { JsonRenderer } from './JsonRenderer';
-import { focusCameraOn } from 'ud-viz/src/Components/Camera/CameraUtils';
+// import { Component } from '@ud-viz/browser';
 import './SparqlQueryWindow.css';
 import { CityObjectProviderPatch } from '../CityObjectProviderPatch';
 
@@ -13,7 +13,7 @@ import { CityObjectProviderPatch } from '../CityObjectProviderPatch';
  * The SPARQL query window class which provides the user interface for querying
  * a SPARQL endpoint and displaying the endpoint response.
  */
-export class SparqlQueryWindow extends Window {
+export class SparqlQueryWindow extends Widget.Component.GUI.Window {
   /**
    * Creates a SPARQL query window.
    * @param {SparqlEndpointResponseProvider} sparqlProvider The SPARQL Endpoint Response Provider
@@ -114,7 +114,7 @@ export class SparqlQueryWindow extends Window {
         URI.tokenizeURI(node_text).id
       );
       if (tilesManagerAndcityObject) {
-        focusCameraOn(
+        Component.Itowns.Component.focusCameraOn(
           this.layerManager.view,
           this.layerManager.view.controls,
           tilesManagerAndcityObject[1].centroid,

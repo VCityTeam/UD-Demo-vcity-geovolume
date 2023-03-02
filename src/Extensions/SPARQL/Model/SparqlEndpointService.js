@@ -1,10 +1,10 @@
-import { RequestService } from 'ud-viz/src/Components/Request/RequestService';
+import { Widget } from '@ud-viz/browser';
 
 /**
  * The SPARQL Endpoint Service which contains connection information and functions
  * for fetching data from a specific SPARQL Endpoint.
  */
-export class SparqlEndpointService extends RequestService {
+export class SparqlEndpointService extends Widget.Server.Component.RequestService {
   /**
    * Creates a SPARQLEndpointService object for communicating with a SPARQL Endpoint
    * based on a given configuration
@@ -19,13 +19,12 @@ export class SparqlEndpointService extends RequestService {
 
     if (
       !!config &&
-      !!config.sparqlModule &&
-      !!config.sparqlModule.url &&
-      !!config.sparqlModule.url_parameters
+      !!config.url &&
+      !!config.url_parameters
     ) {
       // wget "http://localhost:9999/strabon/Query?handle=download&query=%0ASELECT+*%0AWHERE+%7B+%0A%09%3Fs+%3Fp+%3Fo%09%0A%7D%0A&format=SPARQL/JSON&view=HTML"
-      this.url = config.sparqlModule.url;
-      this.url_parameters = config.sparqlModule.url_parameters;
+      this.url = config.url;
+      this.url_parameters = config.url_parameters;
     } else {
       throw 'The given "sparqlModule" configuration is incorrect.';
     }

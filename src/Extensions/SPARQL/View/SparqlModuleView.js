@@ -1,11 +1,11 @@
-import { ModuleView } from 'ud-viz/src/Widgets/Components/ModuleView/ModuleView';
+import { Widget } from '@ud-viz/browser';
 import { SparqlQueryWindow } from './SparqlQueryWindow';
 import { CityObjectProviderPatch } from '../CityObjectProviderPatch';
 import { GeoVolumeWindow } from '../../GeoVolume/GeoVolume/View/GeoVolumeWindow';
 /**
  * The SPARQL ModuleView class which manages the SPARQL query window.
  */
-export class SparqlModuleView extends ModuleView {
+export class SparqlModuleView extends Widget.Component.WidgetView {
   /**
    * Creates a new SparqlModuleView.
    *

@@ -1,6 +1,6 @@
-import {THREE,itowns,jquery}  from 'ud-viz';
+import {THREE,itowns}  from '@ud-viz/browser';
 import { GeoVolume } from '../Model/GeoVolume';
-
+import * as jquery from 'jquery';
 /**
  * const GeoVolumeSource = new GeoVolumeSource({
  *     url: 'http://dummy.fr/',

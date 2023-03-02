@@ -1,4 +1,4 @@
-import { itowns, THREE } from "ud-viz";
+import { itowns, THREE } from "@ud-viz/browser";
 
 const boundingVolumeBox = new THREE.Box3();
 const boundingVolumeSphere = new THREE.Sphere();
@@ -40,12 +40,16 @@ const computeNodeSSE = (camera, node) => {
 // but uses does not subdivided if it is not on a given extent
 // https://github.com/iTowns/itowns/blob/7a9457075067afa1a7aa2dc3cb72999033105ff6/src/Process/3dTilesProcessing.js#L374
 const subdivision = (context, layer, node) => {
+  node.additiveRefinement = false;
   if (node.boundingVolume.box) {
     boundingVolumeBox.copy(node.boundingVolume.box);
     boundingVolumeBox.applyMatrix4(layer.root.matrixWorld);
     if (layer.clipExtent) {      
-      if (!boundingVolumeBox.intersectsBox(layer.clipExtent)) 
+      if (!boundingVolumeBox.intersectsBox(layer.clipExtent) && !layer.clipExtent.containsBox(boundingVolumeBox)) 
       { 
+        node.additiveRefinement = true;
+
+        node.visible = false;
         return false;
       }
     }
@@ -57,14 +61,13 @@ const subdivision = (context, layer, node) => {
 };
 
 const culling = (layer, camera, node, tileMatrixWorld) => {
-  console.log(node);
+  // console.log(node);
   if (node.boundingVolume.box) {
     boundingVolumeBox.copy(node.boundingVolume.box);
     boundingVolumeBox.applyMatrix4(tileMatrixWorld);
     if (layer.clipExtent) {      
       if (!boundingVolumeBox.intersectsBox(layer.clipExtent)) 
       { 
-        node.visible = false;
         return true;
       }
       else{
@@ -74,20 +77,20 @@ const culling = (layer, camera, node, tileMatrixWorld) => {
   }
 
 
-  if (
-    node.viewerRequestVolume &&
-    node.viewerRequestVolume.viewerRequestVolumeCulling(camera, tileMatrixWorld)
-  ) {
-    return true;
-  }
+  // if (
+  //   node.viewerRequestVolume &&
+  //   node.viewerRequestVolume.viewerRequestVolumeCulling(camera, tileMatrixWorld)
+  // ) {
+  //   return true;
+  // }
 
-  // For bounding volume
-  if (
-    node.boundingVolume &&
-    node.boundingVolume.boundingVolumeCulling(camera, tileMatrixWorld)
-  ) {
-    return true;
-  }
+  // // For bounding volume
+  // if (
+  //   node.boundingVolume &&
+  //   node.boundingVolume.boundingVolumeCulling(camera, tileMatrixWorld)
+  // ) {
+  //   return true;
+  // }
 
   return false;
 };

@@ -1,6 +1,6 @@
-import { CityObjectProvider } from 'ud-viz/src/Widgets/CityObjects/ViewModel/CityObjectProvider';
+import { Widget } from '@ud-viz/browser';
 
-export class CityObjectProviderPatch extends CityObjectProvider {
+export class CityObjectProviderPatch extends Widget.CityObjectProvider {
 
   constructor(layerManager) {
     super(layerManager);
@@ -13,13 +13,13 @@ export class CityObjectProviderPatch extends CityObjectProvider {
       if (this.selectedCityObject != cityObject) {
         if (this.selectedCityObject) {
           this.sendEvent(
-            CityObjectProvider.EVENT_CITY_OBJECT_CHANGED,
+            Widget.CityObjectProvider.EVENT_CITY_OBJECT_CHANGED,
             cityObject
           );
           this.unselectCityObject();
         } else {
           this.sendEvent(
-            CityObjectProvider.EVENT_CITY_OBJECT_SELECTED,
+            Widget.CityObjectProvider.EVENT_CITY_OBJECT_SELECTED,
             cityObject
           );
         }

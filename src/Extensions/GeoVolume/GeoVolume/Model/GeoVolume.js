@@ -1,6 +1,5 @@
-import { boxIntersect } from "box-intersect";
-import proj4 from 'proj4';
-import { THREE} from "ud-viz";
+import { boxIntersect } from 'box-intersect';
+import { THREE,proj4} from '@ud-viz/browser';
 
 export class GeoVolume {
   constructor(jsonObject) {
@@ -65,11 +64,11 @@ export class GeoVolume {
       : "EPSG:4326";
     let minBbox, maxBbox;
     if (bbox.length == 6) {
-      minBbox = proj4(sourceCrs, destCrs).forward([bbox[0], bbox[1], bbox[2]]);
-      maxBbox = proj4(sourceCrs, destCrs).forward([bbox[3], bbox[4], bbox[5]]);
+      minBbox = proj4.default(sourceCrs, destCrs).forward([bbox[0], bbox[1], bbox[2]]);
+      maxBbox = proj4.default(sourceCrs, destCrs).forward([bbox[3], bbox[4], bbox[5]]);
     } else {
-      minBbox = proj4(sourceCrs, destCrs).forward([bbox[0], bbox[1]]);
-      maxBbox = proj4(sourceCrs, destCrs).forward([bbox[2], bbox[3]]);
+      minBbox = proj4.default(sourceCrs, destCrs).forward([bbox[0], bbox[1]]);
+      maxBbox = proj4.default(sourceCrs, destCrs).forward([bbox[2], bbox[3]]);
     }
     return minBbox.concat(maxBbox);
   }

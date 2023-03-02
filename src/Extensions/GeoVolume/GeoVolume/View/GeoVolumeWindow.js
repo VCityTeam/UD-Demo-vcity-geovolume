@@ -1,13 +1,14 @@
-import { Widgets, Components, itowns, THREE } from "ud-viz";
-import { CityObjectID } from "ud-viz/src/Components/3DTiles/Model/CityObject";
-import { TilesManager } from "ud-viz/src/Components/Components";
+import { Widget, itowns, THREE, setup3DTilesLayer} from "@ud-viz/browser";
+import { TilesManager } from '@ud-viz/browser/src/Component/Itowns/Itowns';
+import { CityObjectID } from '@ud-viz/browser/src/Component/Itowns/Itowns';
+
 import { refinementFiltered } from "../../Utils/Refinement";
 // import { SensorExtension } from '../../../Sensor/SensorExtension';
-export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
+export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   constructor(geoVolumeSource, allWidget) {
     super("geovolumeWindow", "GeoVolume", false);
     this.geoVolumeSource = geoVolumeSource;
-    this.view = allWidget.view3D.getItownsView();
+    this.itownsView = allWidget.getFrame3DPlanar().getItownsView();
     this.app = allWidget;
     this.bboxGeomOfGeovolumes = new Array();
 
@@ -15,7 +16,6 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
       this.onMouseClick(event);
     };
     this.app.viewerDivElement.addEventListener("mousedown", clickListener);
-    console.log(this.view);
 
     this.registerEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
   }
@@ -27,7 +27,7 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     //   (event.layerX / this.app.view3D.rootWebGL.offsetWidth) * 2.0 - 1,
     //   -(event.layerY / this.app.view3D.rootWebGL.offsetHeight) * 2 + 1
     // );
-    // raycaster.setFromCamera(mouse3D, this.view.camera.camera3D);
+    // raycaster.setFromCamera(mouse3D, this.itownsView.camera.camera3D);
     // let intersects = raycaster.intersectObjects(this.bboxGeomOfGeovolumes);
     // console.log(intersects);
   }
@@ -47,16 +47,52 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
     `;
   }
 
-  visualizeContent(geovolume, content) {
+  visualizePointCloudContent(geovolume,content){
+    const mat = new THREE.PointsMaterial({
+      size: 2,
+      vertexColors: true,
+    });
+    const l3dt = new itowns.C3DTilesLayer(
+      content.id,
+      {
+        name: content.id,
+        source: new itowns.C3DTilesSource({
+          url: '"../../../../../assets/tileset/villeurbanne_tileset/tileset.json',
+        }),
+        overrideMaterials: true,
+      },
+      this.itownsView
+    );
+    l3dt.overrideMaterials = mat;
+    l3dt.material = mat;
+    l3dt.clipExtent = new THREE.Box3(
+      new THREE.Vector3(1845820, 5177430, -100),
+      new THREE.Vector3(1845890, 5177499, 500)
+    );
+
+    itowns.View.prototype.addLayer.call(this.itownsView, l3dt);
+    if(content.variantIdentifier == "extent")
+      refinementFiltered(l3dt);
+
+    
+    var visualisator = document.getElementById(content.id);
+    visualisator.innerHTML =
+      ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+    visualisator.onclick = () => {
+      this.deletePointCloudContent(geovolume, content);
+    };
+  }
+
+  visualize3DTilesContent(geovolume, content) {
     if (content.url == undefined) content.url = content.href;
-    if (this.app.view3D.itownsView.getLayerById(content.id) == undefined) {
-      var itownsLayer = Components.setup3DTilesLayer(
+    if (this.itownsView.getLayerById(content.id) == undefined) {
+      var itownsLayer = setup3DTilesLayer(
         content,
-        this.app.view3D.layerManager,
-        this.view
+        this.app.getFrame3DPlanar().getLayerManager(),
+        this.itownsView
       );
-      itowns.View.prototype.addLayer.call(this.view, itownsLayer);
-      var tilesManager = this.app.view3D.layerManager.getTilesManagerByLayerID(
+      itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
+      var tilesManager = this.app.getFrame3DPlanar().getLayerManager().getTilesManagerByLayerID(
         content.id
       );
       tilesManager.registerStyle("hide", {
@@ -124,19 +160,31 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
       visualisator.innerHTML =
         ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
       visualisator.onclick = () => {
-        this.deleteContent(geovolume, content);
+        this.delete3DTilesContent(geovolume, content);
       };
     }
   }
 
-  deleteContent(geovolume, content) {
-    if (this.app.view3D.itownsView.getLayerById(content.id) != undefined) {
-      this.app.view3D.layerManager.removeLayerByLayerID(content.id);
+  delete3DTilesContent(geovolume, content) {
+    if (this.itownsView.getLayerById(content.id) != undefined) {
+      this.app.getFrame3DPlanar().getLayerManager().remove3DTilesLayerByLayerID(content.id);
       var visualisator = document.getElementById(content.id);
       visualisator.innerHTML =
         ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
       visualisator.onclick = () => {
-        this.visualizeContent(geovolume, content);
+        this.visualize3DTilesContent(geovolume, content);
+      };
+    }
+  }
+
+  deletePointCloudContent(geovolume, content) {
+    if (this.itownsView.getLayerById(content.id) != undefined) {
+      this.itownsView.removeLayer(content.id);
+      var visualisator = document.getElementById(content.id);
+      visualisator.innerHTML =
+        ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+      visualisator.onclick = () => {
+        this.visualizePointCloudContent(geovolume, content);
       };
     }
   }
@@ -164,20 +212,20 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
           var representationEl = document.createElement("li");
           representationEl.innerHTML = c.title + " ";
           if (c.type.includes("3dtiles")) {
-            var visualisator = document.createElement("a");
+            let visualisator = document.createElement("a");
             visualisator.id = `${geovolume.id + "_" + c.title}`;
             c.id = geovolume.id + "_" + c.title;
-            if (this.app.view3D.itownsView.getLayerById(c.id) == undefined) {
+            if (this.itownsView.getLayerById(c.id) == undefined) {
               visualisator.innerHTML =
                 ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
               visualisator.onclick = () => {
-                this.visualizeContent(geovolume, c);
+                this.visualize3DTilesContent(geovolume, c);
               };
             } else {
               visualisator.innerHTML =
                 ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
               visualisator.onclick = () => {
-                this.deleteContent(geovolume, c);
+                this.delete3DTilesContent(geovolume, c);
               };
             }
             representationEl.append(visualisator);
@@ -191,6 +239,26 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
             sparqlDiv.setAttribute("geoVolumeId", geovolume.id);
             sparqlDiv.setAttribute("variantId", c.title);
             representationEl.append(sparqlDiv);
+          }
+          else if (c.type.includes("pnts"))
+          {
+            let visualisator = document.createElement("a");
+            visualisator.id = `${geovolume.id + "_" + c.title}`;
+            c.id = geovolume.id + "_" + c.title;
+            if (this.itownsView.getLayerById(c.id) == undefined) {
+              visualisator.innerHTML =
+                ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+              visualisator.onclick = () => {
+                this.visualizePointCloudContent(geovolume, c);
+              };
+            } else {
+              visualisator.innerHTML =
+                ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+              visualisator.onclick = () => {
+                this.deletePointCloudContent(geovolume, c);
+              };
+            }
+            representationEl.append(visualisator);
           }
           representationsList.appendChild(representationEl);
         }
@@ -217,14 +285,13 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
   }
 
   displayGeoVolumeInScene(geoVolume) {
-    geoVolume.displayBbox(this.view.scene);
+    geoVolume.displayBbox(this.itownsView.scene);
     this.bboxGeomOfGeovolumes.push(geoVolume.bboxGeom);
     if (geoVolume.children.length > 0) {
       for (let child of geoVolume.children) {
         this.displayCollectionsInScene(child);
       }
     }
-    this.app.update3DView();
   }
 
   displayCollectionsInScene() {
@@ -237,77 +304,14 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
       this.deleteBboxGeomOfGeovolumes();
       this.displayCollectionsInHTML();
       this.displayCollectionsInScene();
+      this.itownsView.notifyChange();
       this.sendEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
-    });
-
-    console.log(this.view);
-
-    // let potreeLayer = new itowns.PotreeLayer("test", {
-    //   source: new itowns.PotreeSource({
-    //     version : "2.0",
-    //     file: "cloud.js",
-    //     url: "../../../../../assets/data",
-    //     crs: this.view.referenceCrs,
-    //   }),
-    // });
-
-    // function onLayerReady(){
-    //   console.log(potreeLayer);
-    //   potreeLayer.pointSize = 3;
-    //   console.log(potreeLayer.object3d.children[0]);
-    // }
-
-
-      
-    // const mat = new THREE.PointsMaterial({
-    //   size: 2,
-    //   vertexColors: true,
-    // });
-    // let vectormax = new THREE.Vector3(1845820, 5177430, -100);
-    // let vectormin = new THREE.Vector3(1845890, 5177499, 500);
-
-    // mat.onBeforeCompile = function(shader) {
-    //   console.log("hello");
-    // //   shader.uniforms.vectormax = mat.userData.vectormax;
-    // //   shader.uniforms.vectormin = mat.userData.vectormin;
-    // //   shader.vertexShader = shader.vertexShader.replace(
-    // //     'void main() {',
-    // //     'uniform vec3 vectormax;\nvoid main() {'
-    // //   );
-    //   // shader.vertexShader =
-    //   //   'uniform vec3 vectormax;\nuniform vec3 vectormin;\n' +
-    //   //   shader.vertexShader;
-    // };
-    // mat.needsUpdate = true;
-
-
-    // console.log(mat);
-
-    // const l3dt = new itowns.C3DTilesLayer(
-    //   "3dtiles",
-    //   {
-    //     name: "3dtl",
-    //     source: new itowns.C3DTilesSource({
-    //       url: '"../../../../../assets/tileset/fusion/tileset.json',
-    //     }),
-    //     overrideMaterials: true,
-    //   },
-    //   this.view
-    // );
-    // l3dt.overrideMaterials = mat;
-    // l3dt.material = mat;
-    // l3dt.clipExtent = new THREE.Box3(
-    //   new THREE.Vector3(1845820, 5177430, -100),
-    //   new THREE.Vector3(1845890, 5177499, 500)
-    // );
-
-    // itowns.View.prototype.addLayer.call(this.view, l3dt);
-    // refinementFiltered(l3dt);
-  }
+    });      
+    }
 
   deleteBboxGeomOfGeovolumes() {
     for (let bbox of this.bboxGeomOfGeovolumes) {
-      this.view.scene.remove(bbox);
+      this.itownsView.scene.remove(bbox);
     }
   }
 
@@ -317,7 +321,6 @@ export class GeoVolumeWindow extends Widgets.Components.GUI.Window {
       this.clickListener
     );
     this.deleteBboxGeomOfGeovolumes();
-    this.app.update3DView();
   }
 
   get getCollectionsButtonId() {

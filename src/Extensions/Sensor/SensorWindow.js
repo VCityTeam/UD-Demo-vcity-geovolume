@@ -1,5 +1,6 @@
-import { Widgets, jquery } from "ud-viz";
-export class SensorWindow extends Widgets.Components.GUI.Window {
+import { Widget } from "@ud-viz/browser";
+import * as jquery from 'jquery';
+export class SensorWindow extends Widget.Component.GUI.Window {
   constructor(htmlElement) {
     super("sensorWindow", "Sensor", false);
 

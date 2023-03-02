@@ -1,8 +1,8 @@
-import { Widgets } from "ud-viz";
+import { Widget } from "@ud-viz/browser";
 import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
 import { SensorWindow } from "./SensorWindow";
 
-export class SensorExtension extends Widgets.Components.ModuleView {
+export class SensorExtension extends Widget.Component.WidgetView {
   constructor(geoVolumeModule) {
     super();
     this.geoVolumeModule = geoVolumeModule;
