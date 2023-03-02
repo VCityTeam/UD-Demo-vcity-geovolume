@@ -1,0 +1,4 @@
+[submodule "UD-Viz"]
+	path = UD-Viz
+	url = https://github.com/VCityTeam/UD-Viz.git
+	branch = remove3DTilesLayerById
