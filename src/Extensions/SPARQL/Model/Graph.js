@@ -378,8 +378,6 @@ export class Graph {
     }
     return this.typeList.findIndex((d) => d == prefixedId);
   }
-  "https://raw.githubusercontent.com/VCityTeam/UD-Graph/master/Ontologies/CityGML/2.0/core#"
-  "https://raw.githubusercontent.com/VCityTeam/UD-Graph/master/Ontologies/CityGML/2.0/core#"
   /**
    * Hide the graph SVG
    */
