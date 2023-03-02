@@ -95,8 +95,14 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       var tilesManager = this.app.getFrame3DPlanar().getLayerManager().getTilesManagerByLayerID(
         content.id
       );
-      tilesManager.registerStyle("hide", {
+      tilesManager.registerStyle('hide', {
         materialProps: { opacity: 0, color: 0xffffff },
+      });
+      tilesManager.registerStyle('selected', {
+        materialProps: { opacity: 1, color: 0x13ddef }
+      });
+      tilesManager.registerStyle('default', {
+        materialProps: { opacity: 1, color: 0xffffff }
       });
       tilesManager.addEventListener(
         TilesManager.EVENT_TILE_LOADED,
