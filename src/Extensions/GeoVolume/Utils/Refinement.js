@@ -1,4 +1,4 @@
-import { itowns, THREE } from "@ud-viz/browser";
+import { itowns, THREE } from '@ud-viz/browser';
 
 const boundingVolumeBox = new THREE.Box3();
 const boundingVolumeSphere = new THREE.Sphere();

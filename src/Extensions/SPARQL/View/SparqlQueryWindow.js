@@ -1,4 +1,4 @@
-import { Widget } from '@ud-viz/browser';
+import { Component,Widget } from '@ud-viz/browser';
 import { SparqlEndpointResponseProvider } from '../ViewModel/SparqlEndpointResponseProvider';
 import { Graph } from '../Model/Graph';
 import { Table } from '../Model/Table';
@@ -6,7 +6,6 @@ import * as URI from '../Model/URI';
 import { JsonRenderer } from './JsonRenderer';
 // import { Component } from '@ud-viz/browser';
 import './SparqlQueryWindow.css';
-import { CityObjectProviderPatch } from '../CityObjectProviderPatch';
 
 
 /**

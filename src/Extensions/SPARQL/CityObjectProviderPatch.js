@@ -9,7 +9,7 @@ export class CityObjectProviderPatch extends Widget.CityObjectProvider {
   selectCityObjectByBatchTable(key, value) {
     let tileManagerAndCityObject = this.pickCityObjectByBatchTable(key, value);
     if (tileManagerAndCityObject) {
-      let cityObject = tileManagerAndCityObject[1]
+      let cityObject = tileManagerAndCityObject[1];
       if (this.selectedCityObject != cityObject) {
         if (this.selectedCityObject) {
           this.sendEvent(

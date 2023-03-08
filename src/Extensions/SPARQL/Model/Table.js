@@ -1,5 +1,4 @@
 import * as d3 from 'd3';
-import { SparqlQueryWindow } from '../View/SparqlQueryWindow';
 
 export class Table {
   /**
@@ -61,7 +60,7 @@ export class Table {
     //filter data by filtertype
     let dataFilter;
     if (filterValue && filterValue !== '') {
-      dataFilter = table.data.filter(function (d, i) {
+      dataFilter = table.data.filter(function (d) {
         if (
           typeof d[column].value === 'string' &&
           d[column].value.includes(filterValue)

@@ -1,6 +1,5 @@
 import * as d3 from 'd3';
 import { tokenizeURI } from './URI';
-import { SparqlQueryWindow } from '../View/SparqlQueryWindow';
 
 export class Graph {
   /**
@@ -138,7 +137,7 @@ export class Graph {
         })
           .style('fill', 'white')
           .style('opacity', '1');
-        link_label.filter((e, j) => {
+        link_label.filter((e) => {
           return d.index == e.source.index || d.index == e.target.index;
         })
           .style('fill', 'white')
@@ -158,7 +157,7 @@ export class Graph {
         })
           .style('fill', 'grey')
           .style('opacity', '0.5');
-          this.window.sendEvent(Graph.EVENT_NODE_MOUSEOUT, event.path[0].textContent);
+        this.window.sendEvent(Graph.EVENT_NODE_MOUSEOUT, event.path[0].textContent);
       })
       .call(this.drag(simulation));
       
@@ -287,8 +286,8 @@ export class Graph {
       colorSetOrScale: d3.scaleOrdinal(d3.schemeCategory10)
     };
     
-    if (data.head.vars.includes("subject") && data.head.vars.includes("predicate") && data.head.vars.includes("object")) {
-      if (data.head.vars.includes("subjectType") && data.head.vars.includes("objectType")) {
+    if (data.head.vars.includes('subject') && data.head.vars.includes('predicate') && data.head.vars.includes('object')) {
+      if (data.head.vars.includes('subjectType') && data.head.vars.includes('objectType')) {
         /* If the query is formatted using subject, subjectType, predicate, object,
            and objectType variables the node color based on the type of the subject
            or object's respective type */

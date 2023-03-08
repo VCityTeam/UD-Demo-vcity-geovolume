@@ -34,7 +34,7 @@ export class GeoVolume {
 
   displayBbox(threeScene) {
     let bbox = this.extent.spatial.bbox;
-    bbox = this.reprojectBbox(bbox,"EPSG:3946");
+    bbox = this.reprojectBbox(bbox,'EPSG:3946');
     var geom = new THREE.BoxGeometry(
       bbox[3] - bbox[0],
       bbox[1] - bbox[4],
@@ -58,10 +58,10 @@ export class GeoVolume {
   }
 
   reprojectBbox(bbox, crs) {
-    let destCrs = crs ? crs : "EPSG:4326";
+    let destCrs = crs ? crs : 'EPSG:4326';
     let sourceCrs = this.extent.spatial.crs
       ? this.extent.spatial.crs
-      : "EPSG:4326";
+      : 'EPSG:4326';
     let minBbox, maxBbox;
     if (bbox.length == 6) {
       minBbox = proj4.default(sourceCrs, destCrs).forward([bbox[0], bbox[1], bbox[2]]);

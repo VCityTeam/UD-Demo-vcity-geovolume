@@ -1,12 +1,12 @@
-import { Widget, itowns, THREE, setup3DTilesLayer} from "@ud-viz/browser";
+import { Widget, itowns, THREE, setup3DTilesLayer} from '@ud-viz/browser';
 import { TilesManager } from '@ud-viz/browser/src/Component/Itowns/Itowns';
 import { CityObjectID } from '@ud-viz/browser/src/Component/Itowns/Itowns';
 
-import { refinementFiltered } from "../../Utils/Refinement";
+import { refinementFiltered } from '../../Utils/Refinement';
 // import { SensorExtension } from '../../../Sensor/SensorExtension';
 export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   constructor(geoVolumeSource, allWidget) {
-    super("geovolumeWindow", "GeoVolume", false);
+    super('geovolumeWindow', 'GeoVolume', false);
     this.geoVolumeSource = geoVolumeSource;
     this.itownsView = allWidget.getFrame3DPlanar().getItownsView();
     this.app = allWidget;
@@ -15,12 +15,12 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
     let clickListener = (event) => {
       this.onMouseClick(event);
     };
-    this.app.viewerDivElement.addEventListener("mousedown", clickListener);
+    this.app.viewerDivElement.addEventListener('mousedown', clickListener);
 
     this.registerEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
   }
 
-  onMouseClick(event) {
+  onMouseClick() {
     // event.preventDefault();
     // let raycaster = new THREE.Raycaster();
     // let mouse3D = new THREE.Vector2(
@@ -71,7 +71,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
     );
 
     itowns.View.prototype.addLayer.call(this.itownsView, l3dt);
-    if(content.variantIdentifier == "extent")
+    if(content.variantIdentifier == 'extent')
       refinementFiltered(l3dt);
 
     
@@ -108,10 +108,10 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
         TilesManager.EVENT_TILE_LOADED,
         function () {
           if (
-            content.variantIdentifier.includes("GMLID") ||
-            content.variantIdentifier.includes("GUID")
+            content.variantIdentifier.includes('GMLID') ||
+            content.variantIdentifier.includes('GUID')
           ) {
-            var id = content.variantIdentifier.split("=")[1];
+            var id = content.variantIdentifier.split('=')[1];
             for (let tile of tilesManager.tiles) {
               if (tile != undefined) {
                 if (tile.cityObjects != undefined) {
@@ -123,7 +123,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
                       }
                     }
                     if (toHide) {
-                      tilesManager.setStyle(cityObject.cityObjectId, "hide");
+                      tilesManager.setStyle(cityObject.cityObjectId, 'hide');
                     }
                   }
                   tilesManager.applyStyleToTile(tile.tileId, {
@@ -136,27 +136,27 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
               }
             }
           } else if (
-            content.variantIdentifier.includes("TileID") &&
-            content.variantIdentifier.includes("Batch_ID")
+            content.variantIdentifier.includes('TileID') &&
+            content.variantIdentifier.includes('Batch_ID')
           ) {
             tilesManager.addEventListener(
               TilesManager.EVENT_TILE_LOADED,
               function () {
-                var keys = content.variantIdentifier.split("&");
-                var tileId = keys[0].split("=")[1];
-                var batchId = keys[1].split("=")[1];
+                var keys = content.variantIdentifier.split('&');
+                var tileId = keys[0].split('=')[1];
+                var batchId = keys[1].split('=')[1];
                 var coID = new CityObjectID(tileId, batchId);
 
-                tilesManager.setStyleToTileset("hide");
-                tilesManager.styleManager.setStyle(coID, "default");
+                tilesManager.setStyleToTileset('hide');
+                tilesManager.styleManager.setStyle(coID, 'default');
 
                 tilesManager.applyStyles();
                 tilesManager.view.notifyChange();
               }
             );
-          } else if (!content.variantIdentifier.includes("file")) {
+          } else if (!content.variantIdentifier.includes('file')) {
             console.log(
-              "variant accessor not handled : " + content.variantIdentifier
+              'variant accessor not handled : ' + content.variantIdentifier
             );
           }
         }
@@ -197,30 +197,30 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
 
   writeGeoVolume(geovolume, htmlParent) {
     if (geovolume.id && geovolume.links) {
-      var li = document.createElement("li");
-      li.className = "ordered";
-      var linkToSelf = "";
+      var li = document.createElement('li');
+      li.className = 'ordered';
+      var linkToSelf = '';
       for (let link of geovolume.links) {
-        if (link.rel == "self") {
+        if (link.rel == 'self') {
           linkToSelf = link.href;
         }
       }
-      var a = document.createElement("a");
+      var a = document.createElement('a');
       a.href = linkToSelf;
       a.innerText = geovolume.id;
       li.appendChild(a);
 
       if (geovolume.content.length > 0) {
-        li.innerHTML += "<br>    Representations : ";
+        li.innerHTML += '<br>    Representations : ';
 
-        var representationsList = document.createElement("ul");
+        var representationsList = document.createElement('ul');
         for (let c of geovolume.content) {
-          var representationEl = document.createElement("li");
-          representationEl.innerHTML = c.title + " ";
-          if (c.type.includes("3dtiles")) {
-            let visualisator = document.createElement("a");
-            visualisator.id = `${geovolume.id + "_" + c.title}`;
-            c.id = geovolume.id + "_" + c.title;
+          var representationEl = document.createElement('li');
+          representationEl.innerHTML = c.title + ' ';
+          if (c.type.includes('3dtiles')) {
+            let visualisator = document.createElement('a');
+            visualisator.id = `${geovolume.id + '_' + c.title}`;
+            c.id = geovolume.id + '_' + c.title;
             if (this.itownsView.getLayerById(c.id) == undefined) {
               visualisator.innerHTML =
                 ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
@@ -235,22 +235,22 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
               };
             }
             representationEl.append(visualisator);
-          } else if (c.type.includes("sensor")) {
-            var sensorDiv = document.createElement("a");
-            sensorDiv.id = `geoVolume_sensor`;
+          } else if (c.type.includes('sensor')) {
+            var sensorDiv = document.createElement('a');
+            sensorDiv.id = 'geoVolume_sensor';
             representationEl.append(sensorDiv);
-          } else if (c.type.includes("sparql")) {
-            var sparqlDiv = document.createElement("a");
-            sparqlDiv.className = `geoVolume_sparql`;
-            sparqlDiv.setAttribute("geoVolumeId", geovolume.id);
-            sparqlDiv.setAttribute("variantId", c.title);
+          } else if (c.type.includes('sparql')) {
+            var sparqlDiv = document.createElement('a');
+            sparqlDiv.className = 'geoVolume_sparql';
+            sparqlDiv.setAttribute('geoVolumeId', geovolume.id);
+            sparqlDiv.setAttribute('variantId', c.title);
             representationEl.append(sparqlDiv);
           }
-          else if (c.type.includes("pnts"))
+          else if (c.type.includes('pnts'))
           {
-            let visualisator = document.createElement("a");
-            visualisator.id = `${geovolume.id + "_" + c.title}`;
-            c.id = geovolume.id + "_" + c.title;
+            let visualisator = document.createElement('a');
+            visualisator.id = `${geovolume.id + '_' + c.title}`;
+            c.id = geovolume.id + '_' + c.title;
             if (this.itownsView.getLayerById(c.id) == undefined) {
               visualisator.innerHTML =
                 ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
@@ -271,7 +271,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
         li.appendChild(representationsList);
       }
       if (geovolume.children.length > 0) {
-        var ol = document.createElement("ol");
+        var ol = document.createElement('ol');
         for (let child of geovolume.children) {
           this.writeGeoVolume(child, ol);
         }
@@ -284,7 +284,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   displayCollectionsInHTML() {
     if (this.geoVolumeSource.Collections) {
       let list = this.geoVolumeListElement;
-      list.innerHTML = "";
+      list.innerHTML = '';
       for (let geoVolume of this.geoVolumeSource.Collections)
         this.writeGeoVolume(geoVolume, list);
     }
@@ -313,7 +313,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       this.itownsView.notifyChange();
       this.sendEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
     });      
-    }
+  }
 
   deleteBboxGeomOfGeovolumes() {
     for (let bbox of this.bboxGeomOfGeovolumes) {
@@ -323,7 +323,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
 
   windowDestroyed() {
     this.app.viewerDivElement.removeEventListener(
-      "mousedown",
+      'mousedown',
       this.clickListener
     );
     this.deleteBboxGeomOfGeovolumes();
@@ -358,6 +358,6 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   }
 
   static get GEOVOLUME_COLLECTION_UPDATED() {
-    return "GEOVOLUME_COLLECTION_UPDATED";
+    return 'GEOVOLUME_COLLECTION_UPDATED';
   }
 }

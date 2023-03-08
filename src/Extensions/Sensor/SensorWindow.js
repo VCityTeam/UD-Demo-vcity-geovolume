@@ -1,35 +1,35 @@
-import { Widget } from "@ud-viz/browser";
+import { Widget } from '@ud-viz/browser';
 import * as jquery from 'jquery';
 export class SensorWindow extends Widget.Component.GUI.Window {
   constructor(htmlElement) {
-    super("sensorWindow", "Sensor", false);
+    super('sensorWindow', 'Sensor', false);
 
-    this.user = "admin";
-    this.password = "CARLSource69";
+    this.user = 'admin';
+    this.password = 'CARLSource69';
     this.sensorData = new Object();
-    this.training_url = "http://training-iot.bl-predict.research-bl.com:8086";
-    this.request_max = `SELECT max("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"='CARL_TAMB_HALL_MOY'`;
-    this.request_min = `SELECT min("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"='CARL_TAMB_HALL_MOY'`;
-    this.request_mean = `SELECT last("value") AS "mean_value" FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE "capteurs"='CARL_TAMB_HALL_MOY'`;
+    this.training_url = 'http://training-iot.bl-predict.research-bl.com:8086';
+    this.request_max = 'SELECT max("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"=\'CARL_TAMB_HALL_MOY\'';
+    this.request_min = 'SELECT min("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"=\'CARL_TAMB_HALL_MOY\'';
+    this.request_mean = 'SELECT last("value") AS "mean_value" FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE "capteurs"=\'CARL_TAMB_HALL_MOY\'';
     this.appendTo(htmlElement);
   }
 
   windowCreated() {
-    this.getData(this.request_max, "max").then(() => {
-      this.maxTimeElement.innerText = "Date : " + this.sensorData["max"].time;
+    this.getData(this.request_max, 'max').then(() => {
+      this.maxTimeElement.innerText = 'Date : ' + this.sensorData['max'].time;
       this.maxValueElement.innerText =
-        "Min temp : " + this.sensorData["max"].value;
+        'Min temp : ' + this.sensorData['max'].value;
     });
-    this.getData(this.request_mean, "mean").then(() => {
+    this.getData(this.request_mean, 'mean').then(() => {
       this.meanTimeElement.innerText =
-        "Last measure : " + this.sensorData["mean"].time;
+        'Last measure : ' + this.sensorData['mean'].time;
       this.meanValueElement.innerText =
-        "Mean temp : " + this.sensorData["mean"].value;
+        'Mean temp : ' + this.sensorData['mean'].value;
     });
-    this.getData(this.request_min, "min").then(() => {
-      this.minTimeElement.innerText = "Date : " + this.sensorData["min"].time;
+    this.getData(this.request_min, 'min').then(() => {
+      this.minTimeElement.innerText = 'Date : ' + this.sensorData['min'].time;
       this.minValueElement.innerText =
-        "Min temp : " + this.sensorData["min"].value;
+        'Min temp : ' + this.sensorData['min'].value;
     });
   }
 
@@ -55,26 +55,26 @@ export class SensorWindow extends Widget.Component.GUI.Window {
   buildUrl(influx_url, base, query, format_time) {
     return (
       influx_url +
-      "/query?db=" +
+      '/query?db=' +
       base +
-      "&u=" +
+      '&u=' +
       this.user + 
-      "&p=" +
+      '&p=' +
       this.password +
-      "&epoch=" +
+      '&epoch=' +
       format_time +
-      "&q=" +
+      '&q=' +
       query
     );
   }
 
   getData(request, value) {
-    let url = this.buildUrl(this.training_url, "BAT_CARL", request, "s");
+    let url = this.buildUrl(this.training_url, 'BAT_CARL', request, 's');
     return new Promise((resolve, reject) => {
       jquery.ajax({
-        type: "GET",
+        type: 'GET',
         url: url,
-        headers: { Accept: "application/xhtml+xml" },
+        headers: { Accept: 'application/xhtml+xml' },
         success: (data) => {
           const results = data.results[0].series[0].values[0];
           var dt = new Date(results[0] * 1000).toLocaleString();
@@ -93,7 +93,7 @@ export class SensorWindow extends Widget.Component.GUI.Window {
   }
 
   get sensorDivID() {
-    return "sensor_data";
+    return 'sensor_data';
   }
 
   get sensorDivElement() {
