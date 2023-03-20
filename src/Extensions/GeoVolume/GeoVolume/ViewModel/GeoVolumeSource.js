@@ -78,14 +78,6 @@ export class GeoVolumeSource extends itowns.Source {
     return false;
   }
 
-  createCollectionFromGeoVolume(geoVolume){
-    for(let children of geoVolume.children){
-      this.createCollectionFromGeoVolume(children);
-    }
-    geoVolume.children = new Array();
-    this.collection.push(geoVolume);
-  }
-
   getgeoVolumes(extent = null,crs = null) {
     let url = this.buildUrl(extent,crs);
     return new Promise((resolve, reject) => {
@@ -95,8 +87,7 @@ export class GeoVolumeSource extends itowns.Source {
         success: (data) => {
           this.collection = new Array();
           for (let el of data) {
-            // this.collection.push(new GeoVolume(el));
-            this.createCollectionFromGeoVolume(new GeoVolume(el));
+            this.collection.push(new GeoVolume(el));
           }
           resolve();
         },

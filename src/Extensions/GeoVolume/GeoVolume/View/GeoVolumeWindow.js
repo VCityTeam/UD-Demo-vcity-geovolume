@@ -316,9 +316,8 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   }
 
   deleteBboxGeomOfGeovolumes() {
-    for (let bbox of this.bboxGeomOfGeovolumes) {
-      this.itownsView.scene.remove(bbox);
-    }
+    for (let geoVolume of this.geoVolumeSource.Collections)
+      geoVolume.deleteBbox(this.itownsView.scene);
   }
 
   windowDestroyed() {

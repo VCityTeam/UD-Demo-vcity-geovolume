@@ -32,6 +32,13 @@ export class GeoVolume {
     ];
   }
 
+  deleteBbox(threeScene){
+    threeScene.remove(this.bboxGeom);
+    for (let child of this.children) {
+      child.deleteBbox(threeScene);
+    }
+  }
+
   displayBbox(threeScene) {
     let bbox = this.extent.spatial.bbox;
     bbox = this.reprojectBbox(bbox,'EPSG:3946');
@@ -105,19 +112,21 @@ export class GeoVolume {
   }
 
   containGeovolumeById(id) {
-    if (this.id == id) return true;
+    if (this.id == id) return this;
+    let geoVolume = null;
     for (let child of this.children) {
-      return child.containGeovolumeById(id);
+      geoVolume = child.containGeovolumeById(id);
     }
-    return false;
+    return geoVolume;
   }
 
   getGeovolumeById(id) {
     if (this.id == id) return this;
+    let geoVolume = null;
     for (let child of this.children) {
-      return child.getGeovolumeById(id);
+      geoVolume = child.getGeovolumeById(id);
     }
-    return false;
+    return geoVolume;
   }
 
   getContentByTitle(title){

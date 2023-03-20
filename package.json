@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "workspaces": [
-    "./UD-Viz/packages/*"
+    "./UD-Viz-local/packages/*"
   ],
   "dependencies": {
     "@egjs/hammerjs": "2.0.17",
