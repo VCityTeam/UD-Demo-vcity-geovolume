@@ -62,6 +62,9 @@ export class GeoVolume {
     cube.geoVolume = this;
     threeScene.add(cube);
     this.bboxGeom = cube;
+    for (let child of this.children) {
+      child.displayBbox(threeScene);
+    }
   }
 
   reprojectBbox(bbox, crs) {

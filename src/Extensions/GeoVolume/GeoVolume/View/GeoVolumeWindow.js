@@ -10,7 +10,6 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
     this.geoVolumeSource = geoVolumeSource;
     this.itownsView = allWidget.getFrame3DPlanar().getItownsView();
     this.app = allWidget;
-    this.bboxGeomOfGeovolumes = new Array();
 
     let clickListener = (event) => {
       this.onMouseClick(event);
@@ -292,12 +291,6 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
 
   displayGeoVolumeInScene(geoVolume) {
     geoVolume.displayBbox(this.itownsView.scene);
-    this.bboxGeomOfGeovolumes.push(geoVolume.bboxGeom);
-    if (geoVolume.children.length > 0) {
-      for (let child of geoVolume.children) {
-        this.displayCollectionsInScene(child);
-      }
-    }
   }
 
   displayCollectionsInScene() {
