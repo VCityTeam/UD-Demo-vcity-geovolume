@@ -4,8 +4,8 @@ export class SensorWindow extends Widget.Component.GUI.Window {
   constructor(htmlElement) {
     super('sensorWindow', 'Sensor', false);
 
-    this.user = 'admin';
-    this.password = 'CARLSource69';
+    this.user = '';
+    this.password = '';
     this.sensorData = new Object();
     this.training_url = 'http://training-iot.bl-predict.research-bl.com:8086';
     this.request_max = 'SELECT max("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"=\'CARL_TAMB_HALL_MOY\'';
