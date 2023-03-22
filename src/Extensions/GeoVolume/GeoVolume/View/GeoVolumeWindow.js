@@ -1,4 +1,4 @@
-import { Widget, itowns, THREE, setup3DTilesLayer} from '@ud-viz/browser';
+import { Widget, itowns, THREE, setup3DTilesLayer, createOutliersWithBatchIDOfTileset} from '@ud-viz/browser';
 import { TilesManager } from '@ud-viz/browser/src/Component/Itowns/Itowns';
 import { CityObjectID } from '@ud-viz/browser/src/Component/Itowns/Itowns';
 
@@ -19,23 +19,29 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
     this.registerEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
   }
 
-  onMouseClick() {
-    // event.preventDefault();
-    // let raycaster = new THREE.Raycaster();
-    // let mouse3D = new THREE.Vector2(
-    //   (event.layerX / this.app.view3D.rootWebGL.offsetWidth) * 2.0 - 1,
-    //   -(event.layerY / this.app.view3D.rootWebGL.offsetHeight) * 2 + 1
-    // );
-    // raycaster.setFromCamera(mouse3D, this.itownsView.camera.camera3D);
-    // let intersects = raycaster.intersectObjects(this.bboxGeomOfGeovolumes);
-    // console.log(intersects);
+  onMouseClick(event) {
+    event.preventDefault();
+    let raycaster = new THREE.Raycaster();
+    let mouse3D = new THREE.Vector2(
+      (event.layerX / this.app.getFrame3DPlanar().getRootWebGL().offsetWidth) * 2.0 - 1,
+      -(event.layerY / this.app.getFrame3DPlanar().getRootWebGL().offsetHeight) * 2 + 1
+    );
+    raycaster.setFromCamera(mouse3D, this.itownsView.camera.camera3D);
+    let intersects = raycaster.intersectObjects(this.geoVolumeSource.getVisibleGeoVolumesBboxGeom());
+    if(intersects.length > 0){
+      this.displayGeoVolumeInHTML(intersects[0].object.geoVolume);
+      for(let visibleBbox of this.geoVolumeSource.getVisibleGeoVolumesBboxGeom()){
+        visibleBbox.geoVolume.hideBbox(this.itownsView.scene);
+      }
+      intersects[0].object.geoVolume.displayBbox(this.itownsView.scene);
+      this.itownsView.notifyChange();
+    }
   }
 
   get innerContentHtml() {
     return /*html*/ `
     <div class="box-section">
       <div class ="box-section" id="${this.geoVolumeDivId}"> 
-        <label for="geometry-layers-spoiler" class="section-title">Available GeoVolume</Label>
         <div class="spoiler-box">
           <ol id= "${this.geoVolumeListId}">
           </ol>
@@ -76,7 +82,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
     
     var visualisator = document.getElementById(content.id);
     visualisator.innerHTML =
-      ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+      'Hide';
     visualisator.onclick = () => {
       this.deletePointCloudContent(geovolume, content);
     };
@@ -84,6 +90,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
 
   visualize3DTilesContent(geovolume, content) {
     if (content.url == undefined) content.url = content.href;
+    content.color = "0xffffff";
     if (this.itownsView.getLayerById(content.id) == undefined) {
       var itownsLayer = setup3DTilesLayer(
         content,
@@ -94,6 +101,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       var tilesManager = this.app.getFrame3DPlanar().getLayerManager().getTilesManagerByLayerID(
         content.id
       );
+      createOutliersWithBatchIDOfTileset(tilesManager);
       tilesManager.registerStyle('hide', {
         materialProps: { opacity: 0, color: 0xffffff },
       });
@@ -110,27 +118,32 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
             content.variantIdentifier.includes('GMLID') ||
             content.variantIdentifier.includes('GUID')
           ) {
+            tilesManager.setStyleToTileset('hide');
             var id = content.variantIdentifier.split('=')[1];
             for (let tile of tilesManager.tiles) {
               if (tile != undefined) {
                 if (tile.cityObjects != undefined) {
+                  let lineGeometry = tile.getObject3D().children[0].children[0].children[0];                    
+                  let transparentMat = new THREE.LineBasicMaterial({color: 0x000000});
+                  let mat = new THREE.LineBasicMaterial({color: 0x000000});
+                  transparentMat.transparent = true;
+                  transparentMat.opacity = 0;
+                  let mats = [transparentMat,mat];
+                  lineGeometry.material = mats;
+                  lineGeometry.geometry.material = mats;
+
                   for (let cityObject of tile.cityObjects) {
-                    let toHide = true;
                     for (let prop of Object.entries(cityObject.props)) {
                       if (prop[1] == id) {
-                        toHide = false;
+                        tilesManager.styleManager.setStyle(cityObject.cityObjectId, 'default');
+                        let lineGeometry = tile.getObject3D().children[0].children[0].children[0];                    
+                        const firstIndex = lineGeometry.geometry.attributes._BATCHID.array.indexOf(cityObject.batchId);
+                        const indexCount = lineGeometry.geometry.attributes._BATCHID.array.reduce((acc, cur) => cur === cityObject.batchId ? acc + 1 : acc, 0);   
+                        lineGeometry.geometry.addGroup(firstIndex,indexCount,1);
                       }
                     }
-                    if (toHide) {
-                      tilesManager.setStyle(cityObject.cityObjectId, 'hide');
-                    }
                   }
-                  tilesManager.applyStyleToTile(tile.tileId, {
-                    updateFunction: tilesManager.view.notifyChange.bind(
-                      tilesManager.view
-                    ),
-                  });
-                  tilesManager.view.notifyChange();
+                  tilesManager.applyStyleToTile(tile.tileId);
                 }
               }
             }
@@ -163,19 +176,28 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
 
       var visualisator = document.getElementById(content.id);
       visualisator.innerHTML =
-        ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+        'Hide';
       visualisator.onclick = () => {
         this.delete3DTilesContent(geovolume, content);
       };
     }
   }
 
+  hideOutliers(tile){
+    let lineGeometry = tile.getObject3D().children[0].children[0].children[0];                    
+    let transparentMat = new THREE.LineBasicMaterial({color: 0x000000});
+    transparentMat.transparent = true;
+    transparentMat.opacity = 0;
+    let mats = [lineGeometry.material,transparentMat];
+    lineGeometry.material = transparentMat;
+    lineGeometry.geometry.material = transparentMat;
+  }
   delete3DTilesContent(geovolume, content) {
     if (this.itownsView.getLayerById(content.id) != undefined) {
       this.app.getFrame3DPlanar().getLayerManager().remove3DTilesLayerByLayerID(content.id);
       var visualisator = document.getElementById(content.id);
       visualisator.innerHTML =
-        ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+        'Show in 3DScene';
       visualisator.onclick = () => {
         this.visualize3DTilesContent(geovolume, content);
       };
@@ -187,7 +209,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       this.itownsView.removeLayer(content.id);
       var visualisator = document.getElementById(content.id);
       visualisator.innerHTML =
-        ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+        'Show in 3DScene';
       visualisator.onclick = () => {
         this.visualizePointCloudContent(geovolume, content);
       };
@@ -196,8 +218,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
 
   writeGeoVolume(geovolume, htmlParent) {
     if (geovolume.id && geovolume.links) {
-      var li = document.createElement('li');
-      li.className = 'ordered';
+      var li = document.createElement('div');
       var linkToSelf = '';
       for (let link of geovolume.links) {
         if (link.rel == 'self') {
@@ -217,18 +238,18 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
           var representationEl = document.createElement('li');
           representationEl.innerHTML = c.title + ' ';
           if (c.type.includes('3dtiles')) {
-            let visualisator = document.createElement('a');
+            let visualisator = document.createElement('button');
             visualisator.id = `${geovolume.id + '_' + c.title}`;
             c.id = geovolume.id + '_' + c.title;
             if (this.itownsView.getLayerById(c.id) == undefined) {
               visualisator.innerHTML =
-                ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+                'Show in 3DScene';
               visualisator.onclick = () => {
                 this.visualize3DTilesContent(geovolume, c);
               };
             } else {
               visualisator.innerHTML =
-                ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+                'hide';
               visualisator.onclick = () => {
                 this.delete3DTilesContent(geovolume, c);
               };
@@ -247,18 +268,18 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
           }
           else if (c.type.includes('pnts'))
           {
-            let visualisator = document.createElement('a');
+            let visualisator = document.createElement('button');
             visualisator.id = `${geovolume.id + '_' + c.title}`;
             c.id = geovolume.id + '_' + c.title;
             if (this.itownsView.getLayerById(c.id) == undefined) {
               visualisator.innerHTML =
-                ' <img src="/assets/icons/more.svg" width="20px" height="20px"></img>';
+                'Show in 3DScene';
               visualisator.onclick = () => {
                 this.visualizePointCloudContent(geovolume, c);
               };
             } else {
               visualisator.innerHTML =
-                ' <img src="/assets/icons/delete.svg" width="20px" height="20px"></img>';
+                'Hide';
               visualisator.onclick = () => {
                 this.deletePointCloudContent(geovolume, c);
               };
@@ -269,13 +290,25 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
         }
         li.appendChild(representationsList);
       }
-      if (geovolume.children.length > 0) {
-        var ol = document.createElement('ol');
-        for (let child of geovolume.children) {
-          this.writeGeoVolume(child, ol);
+
+      var childrenButton = document.createElement('button');
+      childrenButton.innerHTML = 'Show Children';
+      childrenButton.onclick = () => {
+        geovolume.hideBbox(this.itownsView.scene);
+        for(let children of geovolume.children){
+          children.displayBbox(this.itownsView.scene);
         }
-        li.appendChild(ol);
-      }
+      this.itownsView.notifyChange();
+
+      };
+      li.appendChild(childrenButton);
+      // if (geovolume.children.length > 0) {
+      //   var ol = document.createElement('ol');
+      //   for (let child of geovolume.children) {
+      //     this.writeGeoVolume(child, ol);
+      //   }
+      //   li.appendChild(ol);
+      // }
       htmlParent.appendChild(li);
     }
   }
@@ -287,6 +320,12 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       for (let geoVolume of this.geoVolumeSource.Collections)
         this.writeGeoVolume(geoVolume, list);
     }
+  }
+
+  displayGeoVolumeInHTML(geoVolume){
+    let list = this.geoVolumeListElement;
+    list.innerHTML = '';
+    this.writeGeoVolume(geoVolume, list);
   }
 
   displayGeoVolumeInScene(geoVolume) {
@@ -319,6 +358,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       this.clickListener
     );
     this.deleteBboxGeomOfGeovolumes();
+    this.itownsView.notifyChange();
   }
 
   get getCollectionsButtonId() {

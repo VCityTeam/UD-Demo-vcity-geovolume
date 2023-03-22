@@ -78,6 +78,22 @@ export class GeoVolumeSource extends itowns.Source {
     return false;
   }
 
+  getGeoVolumesBboxGeom(){
+    let geoVolumesBbox = new Array();
+    for (let geoVolume of this.collection) {
+      geoVolumesBbox = geoVolumesBbox.concat(geoVolume.getBboxGeom());
+    }
+    return geoVolumesBbox;
+  }
+
+  getVisibleGeoVolumesBboxGeom(){
+    let geoVolumesBbox = new Array();
+    for (let geoVolume of this.collection) {
+      geoVolumesBbox = geoVolumesBbox.concat(geoVolume.getVisibleBboxGeom());
+    }
+    return geoVolumesBbox;
+  }
+
   getgeoVolumes(extent = null,crs = null) {
     let url = this.buildUrl(extent,crs);
     return new Promise((resolve, reject) => {

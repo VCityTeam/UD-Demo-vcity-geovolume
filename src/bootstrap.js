@@ -41,17 +41,17 @@ udvizBrowser.FileUtil.loadMultipleJSON([
 
   const frame3DPlanar = app.getFrame3DPlanar();
 
-  udvizBrowser.addBaseMapLayer(
-    configs['base_maps'][0],
-    frame3DPlanar.itownsView,
-    extent
-  );
+  // udvizBrowser.addBaseMapLayer(
+  //   configs['base_maps'][0],
+  //   frame3DPlanar.itownsView,
+  //   extent
+  // );
 
-  udvizBrowser.addElevationLayer(
-    configs['elevation'],
-    frame3DPlanar.itownsView,
-    extent
-  );
+  // udvizBrowser.addElevationLayer(
+  //   configs['elevation'],
+  //   frame3DPlanar.itownsView,
+  //   extent
+  // );
 
   const debug3dTilesWindow = new udvizBrowser.Widget.Debug3DTilesWindow(
     frame3DPlanar.getLayerManager()
