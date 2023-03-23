@@ -1,10 +1,10 @@
-import { Widget } from '@ud-viz/browser';
+import { RequestService } from '@ud-viz/browser';
 
 /**
  * The SPARQL Endpoint Service which contains connection information and functions
  * for fetching data from a specific SPARQL Endpoint.
  */
-export class SparqlEndpointService extends Widget.Server.Component.RequestService {
+export class SparqlEndpointService extends RequestService {
   /**
    * Creates a SPARQLEndpointService object for communicating with a SPARQL Endpoint
    * based on a given configuration

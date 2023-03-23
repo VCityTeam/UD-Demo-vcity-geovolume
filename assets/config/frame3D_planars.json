@@ -1,12 +1,13 @@
 [
   {
+    "hasItownsControls": true,
     "maxSubdivisionLevel": 10,
-    "range": 15000,
+    "range": 50000,
     "heading": 0.1,
-    "tilt": 89,
+    "tilt": 45,
     "coordinates": {
-      "x":1840850.25,
-      "y":5175394.64
+      "x":1845850.25,
+      "y":5168394.64
     }
   }
 ]

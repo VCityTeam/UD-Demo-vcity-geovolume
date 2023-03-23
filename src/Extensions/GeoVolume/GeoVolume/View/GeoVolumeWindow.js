@@ -1,30 +1,41 @@
-import { Widget, itowns, THREE, setup3DTilesLayer, createOutliersWithBatchIDOfTileset} from '@ud-viz/browser';
-import { TilesManager } from '@ud-viz/browser/src/Component/Itowns/Itowns';
-import { CityObjectID } from '@ud-viz/browser/src/Component/Itowns/Itowns';
+import { itowns, THREE, setup3DTilesLayer, appendWireframeByBatchIDToTileset,CityObjectID, TilesManager, findChildByID } from '@ud-viz/browser';
+import { EventSender } from '@ud-viz/shared';
+
 
 import { refinementFiltered } from '../../Utils/Refinement';
 // import { SensorExtension } from '../../../Sensor/SensorExtension';
-export class GeoVolumeWindow extends Widget.Component.GUI.Window {
+export class GeoVolumeWindow extends EventSender {
   constructor(geoVolumeSource, allWidget) {
-    super('geovolumeWindow', 'GeoVolume', false);
+    super();
+    /** @type {HTMLElement} */
+    this.rootHtml = document.createElement('div');
+    this.rootHtml.innerHTML = this.innerContentHtml;
+    
     this.geoVolumeSource = geoVolumeSource;
-    this.itownsView = allWidget.getFrame3DPlanar().getItownsView();
+    this.itownsView = allWidget.frame3DPlanar.getItownsView();
     this.app = allWidget;
 
-    let clickListener = (event) => {
+    this.mouseClickListener = (event) => {
       this.onMouseClick(event);
     };
-    this.app.viewerDivElement.addEventListener('mousedown', clickListener);
 
     this.registerEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
+
+    this.geoVolumeSource.getgeoVolumes().then(() => {
+      this.deleteBboxGeomOfGeovolumes();
+      this.displayCollectionsInHTML();
+      this.displayCollectionsInScene();
+      this.itownsView.notifyChange();
+      this.sendEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
+    }); 
   }
 
   onMouseClick(event) {
     event.preventDefault();
     let raycaster = new THREE.Raycaster();
     let mouse3D = new THREE.Vector2(
-      (event.layerX / this.app.getFrame3DPlanar().getRootWebGL().offsetWidth) * 2.0 - 1,
-      -(event.layerY / this.app.getFrame3DPlanar().getRootWebGL().offsetHeight) * 2 + 1
+      (event.layerX / this.app.frame3DPlanar.getRootWebGL().offsetWidth) * 2.0 - 1,
+      -(event.layerY / this.app.frame3DPlanar.getRootWebGL().offsetHeight) * 2 + 1
     );
     raycaster.setFromCamera(mouse3D, this.itownsView.camera.camera3D);
     let intersects = raycaster.intersectObjects(this.geoVolumeSource.getVisibleGeoVolumesBboxGeom());
@@ -36,6 +47,29 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       intersects[0].object.geoVolume.displayBbox(this.itownsView.scene);
       this.itownsView.notifyChange();
     }
+  }
+
+  addListenerTo(div) {
+    this.removeListener();
+    div.addEventListener('mousedown', this.mouseClickListener);
+    this.htmlListened = div;
+  }
+
+  removeListener() {
+    if (this.htmlListened)
+      this.htmlListened.removeEventListener(
+        'mousedown',
+        this.mouseClickListener
+      );
+  }
+
+  html() {
+    return this.rootHtml;
+  }
+
+  dispose() {
+    this.rootHtml.remove();
+    this.removeListener();
   }
 
   get innerContentHtml() {
@@ -94,14 +128,14 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
     if (this.itownsView.getLayerById(content.id) == undefined) {
       var itownsLayer = setup3DTilesLayer(
         content,
-        this.app.getFrame3DPlanar().getLayerManager(),
+        this.app.frame3DPlanar.getLayerManager(),
         this.itownsView
       );
       itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
-      var tilesManager = this.app.getFrame3DPlanar().getLayerManager().getTilesManagerByLayerID(
+      var tilesManager = this.app.frame3DPlanar.getLayerManager().getTilesManagerByLayerID(
         content.id
       );
-      createOutliersWithBatchIDOfTileset(tilesManager);
+      tilesManager.addEventListener(TilesManager.EVENT_TILE_LOADED,function(tile){appendWireframeByBatchIDToTileset(tile);});
       tilesManager.registerStyle('hide', {
         materialProps: { opacity: 0, color: 0xffffff },
       });
@@ -194,7 +228,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   }
   delete3DTilesContent(geovolume, content) {
     if (this.itownsView.getLayerById(content.id) != undefined) {
-      this.app.getFrame3DPlanar().getLayerManager().remove3DTilesLayerByLayerID(content.id);
+      this.app.frame3DPlanar.getLayerManager().remove3DTilesLayerByLayerID(content.id);
       var visualisator = document.getElementById(content.id);
       visualisator.innerHTML =
         'Show in 3DScene';
@@ -298,8 +332,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
         for(let children of geovolume.children){
           children.displayBbox(this.itownsView.scene);
         }
-      this.itownsView.notifyChange();
-
+        this.itownsView.notifyChange();
       };
       li.appendChild(childrenButton);
       // if (geovolume.children.length > 0) {
@@ -337,16 +370,6 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
       this.displayGeoVolumeInScene(geoVolume);
   }
 
-  windowCreated() {
-    this.geoVolumeSource.getgeoVolumes().then(() => {
-      this.deleteBboxGeomOfGeovolumes();
-      this.displayCollectionsInHTML();
-      this.displayCollectionsInScene();
-      this.itownsView.notifyChange();
-      this.sendEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
-    });      
-  }
-
   deleteBboxGeomOfGeovolumes() {
     for (let geoVolume of this.geoVolumeSource.Collections)
       geoVolume.deleteBbox(this.itownsView.scene);
@@ -366,7 +389,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   }
 
   get getCollectionsButtonIdElement() {
-    return document.getElementById(this.getCollectionsButtonId);
+    return findChildByID(this.rootHtml,this.getCollectionsButtonId);
   }
 
   get getCollectionsByExtentButtonId() {
@@ -374,7 +397,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   }
 
   get getCollectionsByExtentButtonIdElement() {
-    return document.getElementById(this.getCollectionsByExtentButtonId);
+    return findChildByID(this.rootHtml,this.getCollectionsByExtentButtonId);
   }
 
   get geoVolumeDivId() {
@@ -386,7 +409,7 @@ export class GeoVolumeWindow extends Widget.Component.GUI.Window {
   }
 
   get geoVolumeListElement() {
-    return document.getElementById(this.geoVolumeListId);
+    return findChildByID(this.rootHtml,this.geoVolumeListId);
   }
 
   static get GEOVOLUME_COLLECTION_UPDATED() {

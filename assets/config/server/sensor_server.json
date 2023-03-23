@@ -1,0 +1,9 @@
+{
+  "user": "admin",
+  "password": "CARLSource69",
+  "training_url": "http://training-iot.bl-predict.research-bl.com:8086",
+  "request_max": "SELECT max(\"value\") FROM \"BAT_CARL\".\"autogen\".\"BAT_CARL\" WHERE time > now()-24h AND \"capteurs\"='CARL_TAMB_HALL_MOY'",
+  "request_min": "SELECT min(\"value\") FROM \"BAT_CARL\".\"autogen\".\"BAT_CARL\" WHERE time > now()-24h AND \"capteurs\"='CARL_TAMB_HALL_MOY'",
+  "request_mean": "SELECT last(\"value\") FROM \"BAT_CARL\".\"autogen\".\"BAT_CARL\" WHERE time > now()-24h AND \"capteurs\"='CARL_TAMB_HALL_MOY'",
+}
+

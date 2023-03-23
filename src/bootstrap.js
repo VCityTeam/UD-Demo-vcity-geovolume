@@ -3,10 +3,10 @@
 import * as udvizBrowser from '@ud-viz/browser';
 import { GeoVolumeModule } from './Extensions/GeoVolume/GeoVolumeModule';
 import { SensorExtension } from './Extensions/Sensor/SensorExtension';
-import { SparqlModule } from './Extensions/SPARQL/SparqlModule';
+// import { SparqlModule } from './Extensions/SPARQL/SparqlModule';
 
 udvizBrowser.FileUtil.loadMultipleJSON([
-  '../assets/config/all_widget.json',
+  '../assets/config/scene.json',
   '../assets/config/extent_lyon.json',
   '../assets/config/frame3D_planars.json',
   '../assets/config/layer/base_maps.json',
@@ -33,60 +33,66 @@ udvizBrowser.FileUtil.loadMultipleJSON([
     parseInt(configs['extent_lyon'].north)
   );
 
-  const app = new udvizBrowser.AllWidget(
+  const app = new udvizBrowser.SideBarWidget(
     extent,
-    configs['all_widget'],
-    configs['frame3D_planars'][0]
+    configs['frame3D_planars'][0],
+    configs['scene']
   );
 
-  const frame3DPlanar = app.getFrame3DPlanar();
+  app.addLogos([
+    './assets/img/logo-BL.jpg',
+    './assets/img/logo-liris.png',
+    './assets/img/logo-univ-lyon.png',
+    './assets/img/cnrs.png'
+  ]);
 
-  // udvizBrowser.addBaseMapLayer(
-  //   configs['base_maps'][0],
-  //   frame3DPlanar.itownsView,
-  //   extent
-  // );
-
-  // udvizBrowser.addElevationLayer(
-  //   configs['elevation'],
-  //   frame3DPlanar.itownsView,
-  //   extent
-  // );
-
-  const debug3dTilesWindow = new udvizBrowser.Widget.Debug3DTilesWindow(
-    frame3DPlanar.getLayerManager()
-  );
-  app.addWidgetView('3dtilesDebug', debug3dTilesWindow, {
-    name: '3DTiles Debug',
+  app.addLayers({
+    elevation: configs['elevation'],
+    baseMap: configs['base_maps'][0]
   });
 
-  // //// LAYER CHOICE MODULE
-  const layerChoice = new udvizBrowser.Widget.LayerChoice(
-    frame3DPlanar.getLayerManager()
-  );
-  app.addWidgetView('layerChoice', layerChoice);
-
-  const cityObjectProvider = new udvizBrowser.Widget.CityObjectProvider(
-    frame3DPlanar.getLayerManager(),
-    configs['styles']
+  app.addWidgetCityObject(
+    configs['styles'],
+    './assets/icons/cityObjects.svg'
   );
 
-  // //// CITY OBJECTS MODULE
-  const cityObjectModule = new udvizBrowser.Widget.CityObjectModule(
-    cityObjectProvider,
-    configs['styles']
-  );
-  app.addWidgetView('cityObjects', cityObjectModule.view);
+  app.addWidgetDebug3DTiles('./assets/icons/3dtilesDebug.svg');
 
+  app.addWidgetLayerChoice('./assets/icons/layerChoice.svg');
+
+
+  // const frame3DPlanar = app.frame3DPlanar;
+ 
   const geoVolumeModule = new GeoVolumeModule(configs['geovolume_server'], app);
-  app.addWidgetView('geoVolume', geoVolumeModule.view);
+  const sideBarButton = document.createElement('img');
+  sideBarButton.src = "./assets/icons/geoVolume.svg";
+  app.menuSideBar.appendChild(sideBarButton);
 
-  new SensorExtension(geoVolumeModule);
+  sideBarButton.onclick = () => {
+    if (geoVolumeModule.view.html().parentElement) {
+      app.panMenuSideBar.remove(geoVolumeModule.view.html());
+      geoVolumeModule.view.dispose();
+      sideBarButton.classList.remove(
+        '_sidebar_widget_menu_sidebar_img_selected'
+      );
+    } else {
+      app.panMenuSideBar.add(
+        'GeoVolume',
+        geoVolumeModule.view.html()
+      );
+      geoVolumeModule.view.addListenerTo(app.frame3DPlanar.rootWebGL);
+      sideBarButton.classList.add(
+        '_sidebar_widget_menu_sidebar_img_selected'
+      );
+    }
+  };
+
+  // new SensorExtension(geoVolumeModule);
 
   ////// SPARQL MODULE
-  new SparqlModule(
-    configs['sparql_server'],
-    frame3DPlanar.getLayerManager(),
-    geoVolumeModule
-  );
+  // new SparqlModule(
+  //   configs['sparql_server'],
+  //   frame3DPlanar.getLayerManager(),
+  //   geoVolumeModule
+  // );
 });
