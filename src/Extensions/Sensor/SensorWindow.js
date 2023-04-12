@@ -1,14 +1,14 @@
 import * as jquery from 'jquery';
 export class SensorWindow  {
-  constructor(htmlElement) {
-
-    this.user = '';
-    this.password = '';
+  constructor(htmlElement,config) {
+    console.log(config);
+    this.user = config['user'];
+    this.password = config['password'];
     this.sensorData = new Object();
-    this.training_url = 'http://training-iot.bl-predict.research-bl.com:8086';
-    this.request_max = 'SELECT max("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"=\'CARL_TAMB_HALL_MOY\'';
-    this.request_min = 'SELECT min("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"=\'CARL_TAMB_HALL_MOY\'';
-    this.request_mean = 'SELECT last("value") AS "mean_value" FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE "capteurs"=\'CARL_TAMB_HALL_MOY\'';
+    this.training_url = config['training_url'];
+    this.request_max = config['request_max'];
+    this.request_min = config['request_min'];
+    this.request_mean =config['request_mean'];
     this.appendTo(htmlElement);
   }
 

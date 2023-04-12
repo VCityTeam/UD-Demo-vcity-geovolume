@@ -16,6 +16,7 @@ udvizBrowser.FileUtil.loadMultipleJSON([
   '../assets/config/widget/sparql_widget.json',
   '../assets/config/server/sparql_server.json',
   '../assets/config/server/geovolume_server.json',
+  '../assets/config/server/sensor_server.json',
   '../assets/config/styles.json',
 ]).then((configs) => {
 
@@ -87,7 +88,7 @@ udvizBrowser.FileUtil.loadMultipleJSON([
     }
   };
 
-  // new SensorExtension(geoVolumeModule);
+  new SensorExtension(geoVolumeModule,configs["sensor_server"]);
 
   ////// SPARQL MODULE
   // new SparqlModule(

@@ -1,4 +1,4 @@
-import { itowns, THREE, setup3DTilesLayer, appendWireframeByBatchIDToTileset,CityObjectID, TilesManager, findChildByID } from '@ud-viz/browser';
+import { itowns, THREE, setup3DTilesLayer, THREEUtil,CityObjectID, TilesManager, findChildByID } from '@ud-viz/browser';
 import { EventSender } from '@ud-viz/shared';
 
 
@@ -135,7 +135,7 @@ export class GeoVolumeWindow extends EventSender {
       var tilesManager = this.app.frame3DPlanar.getLayerManager().getTilesManagerByLayerID(
         content.id
       );
-      tilesManager.addEventListener(TilesManager.EVENT_TILE_LOADED,function(tile){appendWireframeByBatchIDToTileset(tile);});
+      tilesManager.addEventListener(TilesManager.EVENT_TILE_LOADED,function(tile){THREEUtil.appendWireframeByGeometryAttributeToObject3D(tile,"_BATCHID");});
       tilesManager.registerStyle('hide', {
         materialProps: { opacity: 0, color: 0xffffff },
       });
@@ -359,6 +359,7 @@ export class GeoVolumeWindow extends EventSender {
     let list = this.geoVolumeListElement;
     list.innerHTML = '';
     this.writeGeoVolume(geoVolume, list);
+    this.sendEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
   }
 
   displayGeoVolumeInScene(geoVolume) {

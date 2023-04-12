@@ -2,12 +2,12 @@ import { GeoVolumeWindow } from '../GeoVolume/GeoVolume/View/GeoVolumeWindow';
 import { SensorWindow } from './SensorWindow';
 
 export class SensorExtension {
-  constructor(geoVolumeModule) {
+  constructor(geoVolumeModule, config) {
     this.geoVolumeModule = geoVolumeModule;
-    this.createExtension();
+    this.createExtension(config);
   }
 
-  createExtension() {
+  createExtension(config) {
     this.geoVolumeModule.view.addEventListener(
       GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED,
       () => {
@@ -16,7 +16,7 @@ export class SensorExtension {
           let new_button = document.createElement('button');
           new_button.innerText = 'Sensor Data';
           new_button.onclick = () => {
-            new SensorWindow(this.geoVolumeModule.view.parentElement);
+            new SensorWindow(this.geoVolumeModule.view.parentElement,config);
           };
           div_sensor.append(new_button);
         }
