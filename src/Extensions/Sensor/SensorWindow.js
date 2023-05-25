@@ -1,7 +1,6 @@
 import * as jquery from 'jquery';
 export class SensorWindow  {
-  constructor(htmlElement,config) {
-    console.log(config);
+  constructor(config) {
     this.user = config['user'];
     this.password = config['password'];
     this.sensorData = new Object();
@@ -9,7 +8,8 @@ export class SensorWindow  {
     this.request_max = config['request_max'];
     this.request_min = config['request_min'];
     this.request_mean =config['request_mean'];
-    this.appendTo(htmlElement);
+    this.rootHtml = document.createElement('div');
+    this.rootHtml.innerHTML = this.innerContentHtml;
   }
 
   windowCreated() {
@@ -29,6 +29,15 @@ export class SensorWindow  {
       this.minValueElement.innerText =
         'Min temp : ' + this.sensorData['min'].value;
     });
+
+  }
+
+  html() {
+    return this.rootHtml;
+  }
+
+  dispose() {
+    this.rootHtml.remove();
   }
 
   get innerContentHtml() {
