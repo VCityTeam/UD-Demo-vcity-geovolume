@@ -86,8 +86,9 @@ export class GeoVolumeWindow extends EventSender {
   }
 
   visualizePointCloudContent(geovolume, content) {
+    console.log(content);
     const mat = new THREE.PointsMaterial({
-      size: 2,
+      size: 1,
       vertexColors: true,
     });
     const l3dt = new itowns.C3DTilesLayer(
@@ -95,7 +96,7 @@ export class GeoVolumeWindow extends EventSender {
       {
         name: content.id,
         source: new itowns.C3DTilesSource({
-          url: '"../../../../../assets/tileset/villeurbanne_tileset/tileset.json',
+          url: content['href'],
         }),
         overrideMaterials: true,
       },
@@ -183,6 +184,7 @@ export class GeoVolumeWindow extends EventSender {
     lineGeometry.material = transparentMat;
     lineGeometry.geometry.material = transparentMat;
   }
+
   delete3DTilesContent(geovolume, content) {
     if (this.itownsView.getLayerById(content.id) != undefined) {
       this.itownsView.removeLayer(content.id);
@@ -254,8 +256,8 @@ export class GeoVolumeWindow extends EventSender {
             representationEl.append(sparqlDiv);
           } else if (c.type.includes("pnts")) {
             let visualisator = document.createElement("button");
-            visualisator.id = `${geovolume.id + "_" + c.title}`;
             c.id = geovolume.id + "_" + c.title;
+            visualisator.id = `${c.id}`;
             if (this.itownsView.getLayerById(c.id) == undefined) {
               visualisator.innerHTML = "Show in 3DScene";
               visualisator.onclick = () => {
@@ -286,13 +288,13 @@ export class GeoVolumeWindow extends EventSender {
         };
         li.appendChild(childrenButton);
       }
-      // if (geovolume.children.length > 0) {
-      //   var ol = document.createElement('ol');
-      //   for (let child of geovolume.children) {
-      //     this.writeGeoVolume(child, ol);
-      //   }
-      //   li.appendChild(ol);
-      // }
+      if (geovolume.children.length > 0) {
+        var ol = document.createElement('ol');
+        for (let child of geovolume.children) {
+          this.writeGeoVolume(child, ol);
+        }
+        li.appendChild(ol);
+      }
       htmlParent.appendChild(li);
     }
   }

@@ -16,7 +16,6 @@ udvizBrowser.loadMultipleJSON([
   "../assets/config/widget/sparql_widget.json",
   "../assets/config/server/sparql_server.json",
   "../assets/config/server/geovolume_server.json",
-  "../assets/config/server/sensor_server.json",
   "../assets/config/styles.json",
 ]).then((configs) => {
   udvizBrowser.proj4.default.defs(
@@ -60,23 +59,6 @@ udvizBrowser.loadMultipleJSON([
   );
 
   const geoVolumeModule = new GeoVolumeModule(configs["geovolume_server"], frame3DPlanar);
-  // const sideBarButton = document.createElement("img");
-  // sideBarButton.src = "./assets/icons/geoVolume.svg";
-  // app.menuSideBar.appendChild(sideBarButton);
-
-  // sideBarButton.onclick = () => {
-  //   if (geoVolumeModule.view.rootHtml.parentElement) {
-  //     app.panMenuSideBar.remove(geoVolumeModule.view.html());
-  //     geoVolumeModule.view.dispose();
-  //     sideBarButton.classList.remove(
-  //       "_sidebar_widget_menu_sidebar_img_selected"
-  //     );
-  //   } else {
-  //     app.panMenuSideBar.add("GeoVolume", geoVolumeModule.view.html());
-  //     geoVolumeModule.view.addListenerTo(app.frame3DPlanar.rootWebGL);
-  //     sideBarButton.classList.add("_sidebar_widget_menu_sidebar_img_selected");
-  //   }
-  // };
 
   // new SensorExtension(geoVolumeModule, configs["sensor_server"], app.frame3DPlanar);
 
