@@ -3,6 +3,8 @@
 import * as udvizBrowser from "@ud-viz/browser";
 import { GeoVolumeModule } from "./Extensions/GeoVolume/GeoVolumeModule";
 import { SensorExtension } from "./Extensions/Sensor/SensorExtension";
+import css from "./style.css";
+
 // import { SparqlModule } from './Extensions/SPARQL/SparqlModule';
 
 udvizBrowser.loadMultipleJSON([

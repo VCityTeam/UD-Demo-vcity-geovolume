@@ -70,13 +70,16 @@ export class GeoVolume {
 
   hideBbox(threeScene) {
     this.bboxGeom.visible = false;
-    threeScene.remove(this.bboxGeom);
   }
 
 
   displayBbox(threeScene) {
     this.bboxGeom.visible = true;
     threeScene.add(this.bboxGeom);
+  }
+
+  changeBboxVisibility(threeScene) {
+    this.bboxGeom.visible = !this.bboxGeom.visible;
   }
 
   getBboxGeom() {
