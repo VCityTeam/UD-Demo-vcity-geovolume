@@ -62,23 +62,27 @@ export class GeoVolume {
     cube.geoVolume = this;
     this.bboxGeom = cube;
     this.bboxGeom.visible = false;
+
     var geo = new THREE.EdgesGeometry( cube.geometry ); // or WireframeGeometry
     var mat = new THREE.LineBasicMaterial( { color: 0x000000 } );
     var wireframe = new THREE.LineSegments( geo, mat );
     cube.add(wireframe);
   }
 
-  hideBbox(threeScene) {
+  hideBbox() {
     this.bboxGeom.visible = false;
   }
 
+  showBbox() {
+    this.bboxGeom.visible = true;
+  }
 
   displayBbox(threeScene) {
     this.bboxGeom.visible = true;
     threeScene.add(this.bboxGeom);
   }
 
-  changeBboxVisibility(threeScene) {
+  changeBboxVisibility() {
     this.bboxGeom.visible = !this.bboxGeom.visible;
   }
 

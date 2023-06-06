@@ -3,7 +3,9 @@
 import * as udvizBrowser from "@ud-viz/browser";
 import { GeoVolumeModule } from "./Extensions/GeoVolume/GeoVolumeModule";
 import { SensorExtension } from "./Extensions/Sensor/SensorExtension";
+import { SparqlQueryWindow } from "./Extensions/SPARQL/SparqlQueryWindow";
 import css from "./style.css";
+import { GeoVolumeWindow } from "./Extensions/GeoVolume/GeoVolume/View/GeoVolumeWindow";
 
 // import { SparqlModule } from './Extensions/SPARQL/SparqlModule';
 
@@ -39,13 +41,6 @@ udvizBrowser.loadMultipleJSON([
     configs["frame3D_planars"][0]
   );
 
-  // app.addLogos([
-  //   "./assets/img/logo-BL.jpg",
-  //   "./assets/img/logo-liris.png",
-  //   "./assets/img/logo-univ-lyon.png",
-  //   "./assets/img/cnrs.png",
-  // ]);
-
   // ADD BASE MAP
   udvizBrowser.addBaseMapLayer(
     configs["base_maps"][0],
@@ -60,14 +55,19 @@ udvizBrowser.loadMultipleJSON([
     extent
   );
 
+
+
   const geoVolumeModule = new GeoVolumeModule(configs["geovolume_server"], frame3DPlanar);
+  
+  const sparqlWidget = new SparqlQueryWindow(
+    new udvizBrowser.Widget.Server.SparqlEndpointResponseProvider(
+      configs['sparql_server']
+    ),
+    frame3DPlanar,
+    configs['sparql_widget'],
+    geoVolumeModule.view
+  );
 
   // new SensorExtension(geoVolumeModule, configs["sensor_server"], app.frame3DPlanar);
 
-  ////// SPARQL MODULE
-  // new SparqlModule(
-  //   configs['sparql_server'],
-  //   frame3DPlanar.getLayerManager(),
-  //   geoVolumeModule
-  // );
 });
