@@ -222,9 +222,8 @@ export class GeoVolumeWindow extends EventSender {
           .addEventListener(
             itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
             ({ tileContent }) => {
-              THREEUtil.appendWireframeByGeometryAttributeToObject3D(
-                tileContent,
-                "_BATCHID"
+              THREEUtil.appendWireframeToObject3D(
+                tileContent
               );
             }
           );
