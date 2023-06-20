@@ -6,6 +6,8 @@ import { SensorExtension } from "./Extensions/Sensor/SensorExtension";
 import { SparqlQueryWindow } from "./Extensions/SPARQL/SparqlQueryWindow";
 import css from "./style.css";
 import { GeoVolumeWindow } from "./Extensions/GeoVolume/GeoVolume/View/GeoVolumeWindow";
+import { ScaleWidget } from "./Extensions/Scale/ScaleWidget";
+import { MyScaleWidget } from "./Extensions/MyScale/MyScaleWidget";
 
 // import { SparqlModule } from './Extensions/SPARQL/SparqlModule';
 
@@ -14,7 +16,6 @@ udvizBrowser.loadMultipleJSON([
   "../assets/config/extent_lyon.json",
   "../assets/config/frame3D_planars.json",
   "../assets/config/layer/base_maps.json",
-  "../assets/config/layer/elevation.json",
   "../assets/config/widget/about.json",
   "../assets/config/widget/help.json",
   "../assets/config/widget/sparql_widget.json",
@@ -22,11 +23,13 @@ udvizBrowser.loadMultipleJSON([
   "../assets/config/server/geovolume_server.json",
   "../assets/config/styles.json",
 ]).then((configs) => {
-  udvizBrowser.proj4.default.defs(
-    "EPSG:3946",
-    "+proj=lcc +lat_1=45.25 +lat_2=46.75" +
-      " +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-  );
+  // udvizBrowser.proj4.default.defs(
+  //   "EPSG:3946",
+  //   "+proj=lcc +lat_1=45.25 +lat_2=46.75" +
+  //     " +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+  // );
+
+  udvizBrowser.proj4.default.defs("EPSG:3946","+proj=lcc +lat_0=46 +lon_0=3 +lat_1=45.25 +lat_2=46.75 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
 
   const extent = new udvizBrowser.itowns.Extent(
     configs["extent_lyon"].crs,
@@ -48,14 +51,6 @@ udvizBrowser.loadMultipleJSON([
     extent
   );
 
-  // ADD ELEVATION LAYER
-  udvizBrowser.addElevationLayer(
-    configs["elevation"],
-    frame3DPlanar.itownsView,
-    extent
-  );
-
-
 
   const geoVolumeModule = new GeoVolumeModule(configs["geovolume_server"], frame3DPlanar);
   
@@ -67,6 +62,12 @@ udvizBrowser.loadMultipleJSON([
     configs['sparql_widget'],
     geoVolumeModule.view
   );
+
+  const scaleWidget = new ScaleWidget(geoVolumeModule.view,frame3DPlanar);
+
+  const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view,frame3DPlanar);
+
+
 
   // new SensorExtension(geoVolumeModule, configs["sensor_server"], app.frame3DPlanar);
 

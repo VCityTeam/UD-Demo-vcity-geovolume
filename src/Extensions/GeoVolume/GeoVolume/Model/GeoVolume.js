@@ -2,16 +2,18 @@ import { boxIntersect } from "box-intersect";
 import { THREE, proj4 } from "@ud-viz/browser";
 
 export class GeoVolume {
-  constructor(jsonObject) {
+  constructor(jsonObject,crs = "EPSG:4326",parent = null) {
     this.id = jsonObject.id;
     this.title = jsonObject.title;
     this.collectionType = jsonObject.collectionType;
     this.extent = jsonObject.extent;
-    this.centroid = this.getCentroid("EPSG:3946");
+    this.crs = crs;
+    this.centroid = this.getCentroid(this.crs);
     this.links = jsonObject.links;
     this.content = jsonObject.content;
     this.children = this.fillChildren(jsonObject.children);
     this.bboxGeom = null;
+    this.parent = parent;
     this.createBbox();
   }
 
@@ -42,7 +44,7 @@ export class GeoVolume {
 
   createBbox() {
     let bbox = this.extent.spatial.bbox;
-    bbox = this.reprojectBbox(bbox, "EPSG:3946");
+    bbox = this.reprojectBbox(bbox, this.crs);
     var geom = new THREE.BoxGeometry(
       bbox[3] - bbox[0],
       bbox[1] - bbox[4],
@@ -139,7 +141,8 @@ export class GeoVolume {
     let childrenArray = new Array();
     if (jsonChildren) {
       for (let child of jsonChildren) {
-        childrenArray.push(new GeoVolume(child));
+        childrenArray.push(new GeoVolume(child,this.crs,this));
+        
       }
     }
     return childrenArray;

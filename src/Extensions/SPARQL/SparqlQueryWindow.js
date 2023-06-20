@@ -215,7 +215,10 @@ export class SparqlQueryWindow extends EventSender {
               var graphButton = document.createElement("button");
               graphButton.className =
                 "w3-btn w3-medium w3-bar-item w3-round w3-border w3-right";
-              graphButton.innerText = "Graph";
+              let logo = document.createElement("img");
+              logo.src = "../assets/icons/graph.svg";
+              logo.width = "20";
+              graphButton.appendChild(logo);
               graphButton.onclick = () => {
                 Promise.all(promises).then(() => {
                   let index_temp = -1;
