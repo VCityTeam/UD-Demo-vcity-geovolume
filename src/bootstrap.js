@@ -13,6 +13,7 @@ import { MyScaleWidget } from "./Extensions/MyScale/MyScaleWidget";
 
 udvizBrowser.loadMultipleJSON([
   "../assets/config/scene.json",
+  "../assets/config/layer/elevation.json",
   "../assets/config/extent_lyon.json",
   "../assets/config/frame3D_planars.json",
   "../assets/config/layer/base_maps.json",
@@ -22,6 +23,7 @@ udvizBrowser.loadMultipleJSON([
   "../assets/config/server/sparql_server.json",
   "../assets/config/server/geovolume_server.json",
   "../assets/config/styles.json",
+  '../assets/config/layer/3DTiles.json',
 ]).then((configs) => {
   // udvizBrowser.proj4.default.defs(
   //   "EPSG:3946",
@@ -51,6 +53,38 @@ udvizBrowser.loadMultipleJSON([
     extent
   );
 
+  udvizBrowser.addElevationLayer(
+    configs['elevation'],
+    frame3DPlanar.itownsView,
+    extent
+  );
+
+  // let extensions = new udvizBrowser.itowns.C3DTExtensions();
+
+  //       extensions.registerExtension('3DTILES_batch_table_hierarchy', {
+  //         [udvizBrowser.itowns.C3DTilesTypes.batchtable]:
+  //         udvizBrowser.itowns.C3DTBatchTableHierarchyExtension,
+  //       });
+
+
+
+  // const test = new udvizBrowser.itowns.C3DTilesLayer(
+  //   "test",
+  //   {
+  //     name: "test",
+  //     source: new udvizBrowser.itowns.C3DTilesSource({
+  //       url: "../assets/layer/ifc_tileset/tileset.json",
+  //     }),
+  //     registeredExtensions: extensions,
+  //   },
+  //   frame3DPlanar.itownsView
+  // );
+
+  // udvizBrowser.itowns.View.prototype.addLayer.call(
+  //   frame3DPlanar.itownsView,
+  //   test
+  // );
+
 
   const geoVolumeModule = new GeoVolumeModule(configs["geovolume_server"], frame3DPlanar);
   
@@ -64,10 +98,24 @@ udvizBrowser.loadMultipleJSON([
   );
 
   const scaleWidget = new ScaleWidget(geoVolumeModule.view,frame3DPlanar);
-
   const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view,frame3DPlanar);
 
 
+            // //// LAYER CHOICE MODULE
+            // const layerChoice = new udvizBrowser.Widget.LayerChoice(
+            //   frame3DPlanar.itownsView
+            // );
+  
+            // const parent = document.createElement('div');
+            // parent.style.backgroundColor = 'white';
+            // parent.style.width = 'fit-content';
+            // parent.style.position = 'absolute';
+            // parent.style.bottom = '0px';
+
+            // parent.style.zIndex = 2;
+            // parent.appendChild(layerChoice.domElement);
+  
+            // frame3DPlanar.domElementUI.appendChild(parent);
 
   // new SensorExtension(geoVolumeModule, configs["sensor_server"], app.frame3DPlanar);
 

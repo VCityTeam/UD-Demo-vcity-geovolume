@@ -1,0 +1,7 @@
+[
+  {
+    "id": "geojson",
+    "url": "../assets/layer/ifc_tileset/tileset.json",
+    "color": "0x555555"
+  }
+]

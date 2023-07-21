@@ -75,8 +75,6 @@ export class GeoVolumeWindow extends EventSender {
       this.selectedGeoVolume.showBbox();
       this.itownsView.notifyChange();
       this.focusGeovolume(this.selectedGeoVolume);
-      console.log(this.itownsView.controls);
-      // this.itownsView.controls.enablePan = false;
     }
   }
 
@@ -269,7 +267,7 @@ export class GeoVolumeWindow extends EventSender {
       const myStyle = new itowns.Style({
         fill: {
           color: function () {
-            return "white";
+            return "grey";
           },
           opacity: function (feature) {
             if (
@@ -373,7 +371,7 @@ export class GeoVolumeWindow extends EventSender {
         if (geovolume.bboxGeom.visible) bboxButton.classList.remove("w3-grey");
         else bboxButton.classList.add("w3-grey");
         geovolume.changeBboxVisibility();
-        if (geovolume.children[0].bboxGeom.visible) {
+        if (geovolume.children[0] && geovolume.children[0].bboxGeom.visible) {
           childrenButton.classList.remove("w3-grey");
           for (let children of geovolume.children) {
             children.hideBbox();
