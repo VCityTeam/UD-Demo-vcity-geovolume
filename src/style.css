@@ -295,7 +295,6 @@ a {
 .w3-button {
   border: none;
   display: inline-block;
-  padding: 8px 16px;
   vertical-align: middle;
   overflow: hidden;
   text-decoration: none;
@@ -344,16 +343,11 @@ a {
   border-radius: 50%;
 }
 .w3-ul {
-  list-style-type: none;
-  padding: 0;
+  list-style-type: circle;
   margin: 0;
 }
 .w3-ul li {
-  padding: 8px 16px;
-  border-top: 1px solid #111111;
-}
-.w3-ul li:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #111111;
 }
 .w3-tooltip,
 .w3-display-container {
@@ -477,7 +471,6 @@ a {
   width: auto;
 }
 .w3-bar .w3-bar-item {
-  padding: 8px 16px;
   float: left;
   width: auto;
   border: none;
@@ -1628,12 +1621,12 @@ a {
 #geovolume {
   z-index: 2;
   position: absolute;
-
+  padding-right: 20px;
   border: 2px solid #000000cc;
   border-radius: 0 0 15px 0;
   border-top: none;
   border-left: none;
-  background-image: linear-gradient(rgba(35, 82, 153, 0.637), #4f6f9e00);
+  background-color: #cfcfcf;
   font-weight: 700;
 }
 
@@ -1701,9 +1694,6 @@ datalist {
 }
 
 #geovolume_list {
-  padding-top: 1em;
-  padding-left: 1em;
-  padding-right: 1em;
   font-weight: 700;
 }
 
@@ -1726,4 +1716,18 @@ input[type=range]::-webkit-slider-thumb {
   background: #FFFFFF;
   cursor: pointer;
   -webkit-appearance: none;
+}
+
+
+.bbox {
+  position: absolute;
+  right: 2%;
+  padding:0px;
+} 
+
+.geovolume-el {
+  background-color: #a3a3a3;
+  border-radius: 15px;
+  margin: 10px;
+  padding-left: 10px;
 }
