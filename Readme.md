@@ -1,17 +1,3 @@
-## TODO :
-
-- bouton focus :
-  - zoom
-  - mode de visualisation centrée objet ?
-
-- retour au parent
-
-- action métier
-
-- échelle de zoom objet
-
-- échelle de zoom variant
-
 ## Installing and running this demonstration
 
 The demonstration can be locally (on your desktop) started in the following way (fist, check if you have the [pre-requisites](#Pre-requisites)):
