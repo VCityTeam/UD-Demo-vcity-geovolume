@@ -34,12 +34,12 @@ export class GeoVolumeWindow extends EventSender {
     this.registerEvent(GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED);
     frame3DPlanar.domElementUI.appendChild(this.html());
 
-    this.addEventListener(
-      GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-      (geovolume) => {
-        this.changeDisplayedGeovolume(geovolume);
-      }
-    );
+    // this.addEventListener(
+    //   GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+    //   (geovolume) => {
+    //     this.changeDisplayedGeovolume(geovolume);
+    //   }
+    // );
   }
 
   focusGeovolume() {

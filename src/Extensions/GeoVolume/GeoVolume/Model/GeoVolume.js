@@ -55,9 +55,9 @@ export class GeoVolume {
     );
     var cube = new THREE.Mesh(geom);
     cube.material = new THREE.MeshPhongMaterial();
-    cube.material.color.setHex(Math.random() * 0xffffff);
+    // cube.material.color.setHex(Math.random() * 0xffffff);
     cube.material.transparent = true;
-    cube.material.opacity = 0.6;
+    cube.material.opacity = 0.3;
     cube.position.set(this.centroid[0], this.centroid[1], this.centroid[2]);
     cube.updateMatrixWorld();
 
