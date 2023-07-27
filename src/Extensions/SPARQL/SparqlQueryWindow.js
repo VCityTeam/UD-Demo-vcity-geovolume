@@ -1,11 +1,12 @@
-import { focusCameraOn, loadTextFile, findChildByID } from "@ud-viz/browser/";
+import { focusCameraOn, findChildByID } from "@ud-viz/browser/";
+import { loadTextFile } from "@ud-viz/browser/src/FileUtil";
 import { JsonRenderer } from "@ud-viz/browser/src/Widget/Server/SPARQL/View/JsonRenderer";
 import { Table } from "@ud-viz/browser/src/Widget/Server/SPARQL/Model/Table";
 import { Graph } from "@ud-viz/browser/src/Widget/Server/SPARQL/Model/Graph";
 import * as URI from "@ud-viz/browser/src/Widget/Server/SPARQL/Model/URI";
 import { EventSender } from "@ud-viz/shared";
 import { SparqlEndpointResponseProvider } from "@ud-viz/browser/src/Widget/Server/Server";
-import * as itowns from "itowns";
+import { itowns } from "@ud-viz/browser/";
 import * as THREE from "three";
 import "./SparqlQueryWindow.css";
 import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
@@ -199,7 +200,7 @@ export class SparqlQueryWindow extends EventSender {
     parent.style.zIndex = 2;
     parent.appendChild(this.domElement);
   
-    frame3DPlanar.domElementUI.appendChild(parent);
+    frame3DPlanar.rootHtml.appendChild(parent);
 
     this.closeButton.onclick = () => {
       parent.style.display = 'none';

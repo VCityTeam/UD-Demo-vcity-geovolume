@@ -21,25 +21,10 @@ export class GeoVolumeWindow extends EventSender {
     this.itownsView = frame3DPlanar.itownsView;
     this.frame3DPlanar = frame3DPlanar;
 
-    this.mouseClickListener = (event) => {
-      this.onMouseClick(event);
-    };
-    frame3DPlanar.domElementWebGL.addEventListener(
-      "mousedown",
-      this.mouseClickListener
-    );
-
     this.registerEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
     this.registerEvent(GeoVolumeWindow.GEOVOLUME_SHOWN);
     this.registerEvent(GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED);
-    frame3DPlanar.domElementUI.appendChild(this.html());
-
-    // this.addEventListener(
-    //   GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-    //   (geovolume) => {
-    //     this.changeDisplayedGeovolume(geovolume);
-    //   }
-    // );
+    frame3DPlanar.rootHtml.appendChild(this.html());
   }
 
   focusGeovolume() {
@@ -77,32 +62,6 @@ export class GeoVolumeWindow extends EventSender {
       this.selectedGeoVolume.showBbox();
       this.itownsView.notifyChange();
       this.focusGeovolume(this.selectedGeoVolume);
-    }
-  }
-
-  onMouseClick(event) {
-    event.preventDefault();
-    let raycaster = new THREE.Raycaster();
-    let mouse3D = new THREE.Vector2(
-      (event.layerX / this.frame3DPlanar.domElementWebGL.offsetWidth) * 2.0 - 1,
-      -(event.layerY / this.frame3DPlanar.domElementWebGL.offsetHeight) * 2.0 +
-        1
-    );
-    raycaster.setFromCamera(mouse3D, this.itownsView.camera.camera3D);
-    let intersects = raycaster.intersectObjects(
-      this.geoVolumeSource.getVisibleGeoVolumesBboxGeom()
-    );
-    if (intersects.length > 0) {
-      if (
-        !this.selectedGeoVolume ||
-        intersects[0].object.geoVolume.id != this.selectedGeoVolume.id
-      ) {
-        this.sendEvent(
-          GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-          intersects[0].object.geoVolume
-        );
-      }
-      this.focusGeovolume();
     }
   }
 
