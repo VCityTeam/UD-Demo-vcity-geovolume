@@ -1618,6 +1618,8 @@ a {
   padding: 0px;
 }
 
+.w3-ul li:last-child{border-bottom:none}
+
 #geovolume {
   z-index: 2;
   position: absolute;

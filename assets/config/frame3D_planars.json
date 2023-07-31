@@ -1,7 +1,7 @@
 [
   {
     "hasItownsControls": true,
-    "maxSubdivisionLevel": 12,
+    "maxSubdivisionLevel": 13,
     "range": 50000,
     "heading": 0.1,
     "tilt": 89,
