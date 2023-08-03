@@ -50,12 +50,6 @@ loadMultipleJSON([
   "../assets/config/styles.json",
   "../assets/config/layer/3DTiles.json",
 ]).then((configs) => {
-  // udvizBrowser.proj4.default.defs(
-  //   "EPSG:3946",
-  //   "+proj=lcc +lat_1=45.25 +lat_2=46.75" +
-  //     " +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-  // );
-
   udvizBrowser.proj4.default.defs(
     "EPSG:3946",
     "+proj=lcc +lat_1=45.25 +lat_2=46.75 +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
@@ -81,37 +75,11 @@ loadMultipleJSON([
     extent
   );
 
-  console.log(configs["elevation"]);
-
   udvizBrowser.addElevationLayer(
     configs["elevation"],
     frame3DPlanar.itownsView,
     extent
   );
-
-  // let extensions = new udvizBrowser.itowns.C3DTExtensions();
-
-  //       extensions.registerExtension('3DTILES_batch_table_hierarchy', {
-  //         [udvizBrowser.itowns.C3DTilesTypes.batchtable]:
-  //         udvizBrowser.itowns.C3DTBatchTableHierarchyExtension,
-  //       });
-
-  // const test = new udvizBrowser.itowns.C3DTilesLayer(
-  //   "test",
-  //   {
-  //     name: "test",
-  //     source: new udvizBrowser.itowns.C3DTilesSource({
-  //       url: "../assets/layer/ifc_tileset/tileset.json",
-  //     }),
-  //     registeredExtensions: extensions,
-  //   },
-  //   frame3DPlanar.itownsView
-  // );
-
-  // udvizBrowser.itowns.View.prototype.addLayer.call(
-  //   frame3DPlanar.itownsView,
-  //   test
-  // );
 
   const geoVolumeModule = new GeoVolumeModule(
     configs["geovolume_server"],

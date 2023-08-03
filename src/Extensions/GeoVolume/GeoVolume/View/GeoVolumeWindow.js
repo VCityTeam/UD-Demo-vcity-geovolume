@@ -25,6 +25,12 @@ export class GeoVolumeWindow extends EventSender {
     this.registerEvent(GeoVolumeWindow.GEOVOLUME_SHOWN);
     this.registerEvent(GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED);
     frame3DPlanar.rootHtml.appendChild(this.html());
+
+    let clickListener = (event) => {
+      this.frame3DPlanar.itownsView.resize();
+      // this.onMouseClick(event);
+    };
+    frame3DPlanar.rootHtml.addEventListener('mousedown', clickListener);
   }
 
   focusGeovolume() {
