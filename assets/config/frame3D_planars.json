@@ -2,15 +2,15 @@
   {
     "hasItownsControls": true,
     "maxSubdivisionLevel": 13,
-    "range": 50000,
+    "range": 25000,
     "heading": 0.1,
-    "tilt": 89,
+    "tilt": 45,
     "coordinates": {
-      "x": 1840850.25,
-      "y": 5168394.64
+      "x": 1842850.25,
+      "y": 5178394.64
     },
   "sceneConfig": {
-      "cameraFov": 90,
+      "cameraFov": 30,
       "shadowMapSize": 2046,
       "sky": {
         "paths": [
