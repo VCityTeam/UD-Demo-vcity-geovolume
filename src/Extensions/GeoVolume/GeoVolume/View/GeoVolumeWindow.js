@@ -326,11 +326,13 @@ export class GeoVolumeWindow extends EventSender {
       a.href = linkToSelf;
       a.innerText = geovolume.id;
       div_name.appendChild(a);
+      li.appendChild(div_name);
+
 
       var bboxButton = document.createElement("button");
       var childrenButton = document.createElement("button");
 
-      bboxButton.className = "w3-btn w3-round w3-gray w3-border bbox";
+      bboxButton.className = "w3-btn w3-round w3-gray w3-border";
       logo = document.createElement("img");
       logo.src = "../assets/icons/cube.svg";
       logo.width = "20";
@@ -353,10 +355,9 @@ export class GeoVolumeWindow extends EventSender {
         }
         this.itownsView.notifyChange();
       };
-      div_name.appendChild(bboxButton);
+      li.appendChild(bboxButton);
 
-      li.appendChild(div_name);
-
+      
       if (geovolume.children.length > 0) {
         for (let children of geovolume.children) {
           children.displayBbox(this.itownsView.scene);
