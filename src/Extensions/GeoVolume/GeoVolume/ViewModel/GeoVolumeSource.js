@@ -67,7 +67,7 @@ export class GeoVolumeSource extends itowns.Source {
   getgeoVolumesFromExtent(){
     let extent = this.getVisibleExtent();
     let crs = this.itownsView.referenceCrs;
-    return this.getgeoVolumes(extent,crs);
+    return this.getgeoVolumes(crs,extent);
   }
 
   getgeoVolumeInCollectionById(id) {
@@ -78,15 +78,23 @@ export class GeoVolumeSource extends itowns.Source {
     return false;
   }
 
-  createCollectionFromGeoVolume(geoVolume){
-    for(let children of geoVolume.children){
-      this.createCollectionFromGeoVolume(children);
+  getGeoVolumesBboxGeom(){
+    let geoVolumesBbox = new Array();
+    for (let geoVolume of this.collection) {
+      geoVolumesBbox = geoVolumesBbox.concat(geoVolume.getBboxGeom());
     }
-    geoVolume.children = new Array();
-    this.collection.push(geoVolume);
+    return geoVolumesBbox;
   }
 
-  getgeoVolumes(extent = null,crs = null) {
+  getVisibleGeoVolumesBboxGeom(){
+    let geoVolumesBbox = new Array();
+    for (let geoVolume of this.collection) {
+      geoVolumesBbox = geoVolumesBbox.concat(geoVolume.getVisibleBboxGeom());
+    }
+    return geoVolumesBbox;
+  }
+
+  getgeoVolumes(crs = null,extent = null) {
     let url = this.buildUrl(extent,crs);
     return new Promise((resolve, reject) => {
       jquery.ajax({
@@ -95,8 +103,7 @@ export class GeoVolumeSource extends itowns.Source {
         success: (data) => {
           this.collection = new Array();
           for (let el of data) {
-            // this.collection.push(new GeoVolume(el));
-            this.createCollectionFromGeoVolume(new GeoVolume(el));
+            this.collection.push(new GeoVolume(el,this.itownsView.referenceCrs));
           }
           resolve();
         },

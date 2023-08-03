@@ -1,92 +1,118 @@
 /** @format */
 
-import * as udvizBrowser from '@ud-viz/browser';
-import { GeoVolumeModule } from './Extensions/GeoVolume/GeoVolumeModule';
-import { SensorExtension } from './Extensions/Sensor/SensorExtension';
-import { SparqlModule } from './Extensions/SPARQL/SparqlModule';
+import * as udvizBrowser from "@ud-viz/browser";
+import { GeoVolumeModule } from "./Extensions/GeoVolume/GeoVolumeModule";
+import { SensorExtension } from "./Extensions/Sensor/SensorExtension";
+import { SparqlQueryWindow } from "./Extensions/SPARQL/SparqlQueryWindow";
+import css from "./style.css";
+import { ScaleWidget } from "./Extensions/Scale/ScaleWidget";
+import { MyScaleWidget } from "./Extensions/MyScale/MyScaleWidget";
+import {
+  loadJSON,
+  computeFileNameFromPath,
+} from "@ud-viz/browser/src/FileUtil";
 
-udvizBrowser.FileUtil.loadMultipleJSON([
-  '../assets/config/all_widget.json',
-  '../assets/config/extent_lyon.json',
-  '../assets/config/frame3D_planars.json',
-  '../assets/config/layer/base_maps.json',
-  '../assets/config/layer/elevation.json',
-  '../assets/config/widget/about.json',
-  '../assets/config/widget/help.json',
-  '../assets/config/widget/sparql_widget.json',
-  '../assets/config/server/sparql_server.json',
-  '../assets/config/server/geovolume_server.json',
-  '../assets/config/styles.json',
+
+function loadMultipleJSON(urlArray) {
+  return new Promise((resolve, reject) => {
+    const promises = [];
+    const result = {};
+
+    urlArray.forEach((url) => {
+      promises.push(
+        loadJSON(url).then((jsonResult) => {
+          const key = computeFileNameFromPath(url);
+          if (result[key]) throw new Error("conflict same key");
+          result[key] = jsonResult;
+        })
+      );
+    });
+
+    Promise.all(promises)
+      .then(() => {
+        resolve(result);
+      })
+      .catch(reject);
+  });
+}
+
+loadMultipleJSON([
+  "../assets/config/scene.json",
+  "../assets/config/layer/elevation.json",
+  "../assets/config/extent_lyon.json",
+  "../assets/config/frame3D_planars.json",
+  "../assets/config/layer/base_maps.json",
+  "../assets/config/widget/about.json",
+  "../assets/config/widget/help.json",
+  "../assets/config/widget/sparql_widget.json",
+  "../assets/config/server/sparql_server.json",
+  "../assets/config/server/geovolume_server.json",
+  "../assets/config/styles.json",
+  "../assets/config/layer/3DTiles.json",
 ]).then((configs) => {
-
   udvizBrowser.proj4.default.defs(
-    configs['extent_lyon'].crs,
-    '+proj=lcc +lat_1=45.25 +lat_2=46.75' +
-      ' +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+    "EPSG:3946",
+    "+proj=lcc +lat_1=45.25 +lat_2=46.75 +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
   );
 
   const extent = new udvizBrowser.itowns.Extent(
-    configs['extent_lyon'].crs,
-    parseInt(configs['extent_lyon'].west),
-    parseInt(configs['extent_lyon'].east),
-    parseInt(configs['extent_lyon'].south),
-    parseInt(configs['extent_lyon'].north)
+    configs["extent_lyon"].crs,
+    parseInt(configs["extent_lyon"].west),
+    parseInt(configs["extent_lyon"].east),
+    parseInt(configs["extent_lyon"].south),
+    parseInt(configs["extent_lyon"].north)
   );
 
-  const app = new udvizBrowser.AllWidget(
+  const frame3DPlanar = new udvizBrowser.Frame3DPlanar(
     extent,
-    configs['all_widget'],
-    configs['frame3D_planars'][0]
+    configs["frame3D_planars"][0]
   );
 
-  const frame3DPlanar = app.getFrame3DPlanar();
-
+  // ADD BASE MAP
   udvizBrowser.addBaseMapLayer(
-    configs['base_maps'][0],
+    configs["base_maps"][0],
     frame3DPlanar.itownsView,
     extent
   );
 
   udvizBrowser.addElevationLayer(
-    configs['elevation'],
+    configs["elevation"],
     frame3DPlanar.itownsView,
     extent
   );
 
-  const debug3dTilesWindow = new udvizBrowser.Widget.Debug3DTilesWindow(
-    frame3DPlanar.getLayerManager()
+  const geoVolumeModule = new GeoVolumeModule(
+    configs["geovolume_server"],
+    frame3DPlanar
   );
-  app.addWidgetView('3dtilesDebug', debug3dTilesWindow, {
-    name: '3DTiles Debug',
-  });
+
+  const sparqlWidget = new SparqlQueryWindow(
+    new udvizBrowser.Widget.Server.SparqlEndpointResponseProvider(
+      configs["sparql_server"]
+    ),
+    frame3DPlanar,
+    configs["sparql_widget"],
+    geoVolumeModule.view
+  );
+
+  // const scaleWidget = new ScaleWidget(geoVolumeModule.view,frame3DPlanar);
+  // const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view,frame3DPlanar);
 
   // //// LAYER CHOICE MODULE
-  const layerChoice = new udvizBrowser.Widget.LayerChoice(
-    frame3DPlanar.getLayerManager()
-  );
-  app.addWidgetView('layerChoice', layerChoice);
+  // const layerChoice = new udvizBrowser.Widget.LayerChoice(
+  //   frame3DPlanar.itownsView
+  // );
 
-  const cityObjectProvider = new udvizBrowser.Widget.CityObjectProvider(
-    frame3DPlanar.getLayerManager(),
-    configs['styles']
-  );
+  // const parent = document.createElement('div');
+  // parent.style.backgroundColor = 'white';
+  // parent.style.width = 'fit-content';
+  // parent.style.position = 'absolute';
+  // parent.style.bottom = '0px';
 
-  // //// CITY OBJECTS MODULE
-  const cityObjectModule = new udvizBrowser.Widget.CityObjectModule(
-    cityObjectProvider,
-    configs['styles']
-  );
-  app.addWidgetView('cityObjects', cityObjectModule.view);
+  // parent.style.zIndex = 2;
+  // parent.appendChild(layerChoice.domElement);
 
-  const geoVolumeModule = new GeoVolumeModule(configs['geovolume_server'], app);
-  app.addWidgetView('geoVolume', geoVolumeModule.view);
+  // frame3DPlanar.domElementUI.appendChild(parent);
 
-  new SensorExtension(geoVolumeModule);
-
-  ////// SPARQL MODULE
-  new SparqlModule(
-    configs['sparql_server'],
-    frame3DPlanar.getLayerManager(),
-    geoVolumeModule
-  );
+  // new SensorExtension(geoVolumeModule, configs["sensor_server"], app.frame3DPlanar);
 });

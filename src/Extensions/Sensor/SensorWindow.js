@@ -1,17 +1,15 @@
-import { Widget } from '@ud-viz/browser';
 import * as jquery from 'jquery';
-export class SensorWindow extends Widget.Component.GUI.Window {
-  constructor(htmlElement) {
-    super('sensorWindow', 'Sensor', false);
-
-    this.user = '';
-    this.password = '';
+export class SensorWindow  {
+  constructor(config) {
+    this.user = config['user'];
+    this.password = config['password'];
     this.sensorData = new Object();
-    this.training_url = 'http://training-iot.bl-predict.research-bl.com:8086';
-    this.request_max = 'SELECT max("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"=\'CARL_TAMB_HALL_MOY\'';
-    this.request_min = 'SELECT min("value") FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE time > now()-24h AND "capteurs"=\'CARL_TAMB_HALL_MOY\'';
-    this.request_mean = 'SELECT last("value") AS "mean_value" FROM "BAT_CARL"."autogen"."BAT_CARL" WHERE "capteurs"=\'CARL_TAMB_HALL_MOY\'';
-    this.appendTo(htmlElement);
+    this.training_url = config['training_url'];
+    this.request_max = config['request_max'];
+    this.request_min = config['request_min'];
+    this.request_mean =config['request_mean'];
+    this.rootHtml = document.createElement('div');
+    this.rootHtml.innerHTML = this.innerContentHtml;
   }
 
   windowCreated() {
@@ -31,6 +29,15 @@ export class SensorWindow extends Widget.Component.GUI.Window {
       this.minValueElement.innerText =
         'Min temp : ' + this.sensorData['min'].value;
     });
+
+  }
+
+  html() {
+    return this.rootHtml;
+  }
+
+  dispose() {
+    this.rootHtml.remove();
   }
 
   get innerContentHtml() {

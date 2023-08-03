@@ -1,17 +1,20 @@
-import { boxIntersect } from 'box-intersect';
-import { THREE,proj4} from '@ud-viz/browser';
+import { boxIntersect } from "box-intersect";
+import { THREE, proj4 } from "@ud-viz/browser";
 
 export class GeoVolume {
-  constructor(jsonObject) {
+  constructor(jsonObject,crs = "EPSG:4326",parent = null) {
     this.id = jsonObject.id;
     this.title = jsonObject.title;
     this.collectionType = jsonObject.collectionType;
     this.extent = jsonObject.extent;
-    this.centroid = this.getCentroid('EPSG:3946');
+    this.crs = crs;
+    this.centroid = this.getCentroid(this.crs);
     this.links = jsonObject.links;
     this.content = jsonObject.content;
     this.children = this.fillChildren(jsonObject.children);
     this.bboxGeom = null;
+    this.parent = parent;
+    this.createBbox();
   }
 
   isExtentInstersectingWithBbox(bbox, crs) {
@@ -20,11 +23,11 @@ export class GeoVolume {
     return boxIntersect([bboxReprojected, extentBbox]).length > 0;
   }
 
-  getCentroid(crs=null) {
+  getCentroid(crs = null) {
     let bbox = this.extent.spatial.bbox;
-    if(crs){
-      bbox = this.reprojectBbox(bbox,crs);
-    } 
+    if (crs) {
+      bbox = this.reprojectBbox(bbox, crs);
+    }
     return [
       (bbox[0] + bbox[3]) / 2,
       (bbox[1] + bbox[4]) / 2,
@@ -32,9 +35,16 @@ export class GeoVolume {
     ];
   }
 
-  displayBbox(threeScene) {
+  deleteBbox(threeScene) {
+    threeScene.remove(this.bboxGeom);
+    for (let child of this.children) {
+      child.deleteBbox(threeScene);
+    }
+  }
+
+  createBbox() {
     let bbox = this.extent.spatial.bbox;
-    bbox = this.reprojectBbox(bbox,'EPSG:3946');
+    bbox = this.reprojectBbox(bbox, this.crs);
     var geom = new THREE.BoxGeometry(
       bbox[3] - bbox[0],
       bbox[1] - bbox[4],
@@ -44,28 +54,71 @@ export class GeoVolume {
       1
     );
     var cube = new THREE.Mesh(geom);
-    cube.material.wireframe = true;
-    cube.material.wireframeLinewidth = 100;
-    cube.material.color.setHex(0x000000);
+    cube.material = new THREE.MeshPhongMaterial();
     // cube.material.color.setHex(Math.random() * 0xffffff);
-
+    cube.material.transparent = true;
+    cube.material.opacity = 0.3;
     cube.position.set(this.centroid[0], this.centroid[1], this.centroid[2]);
     cube.updateMatrixWorld();
 
     cube.geoVolume = this;
-    threeScene.add(cube);
     this.bboxGeom = cube;
+    this.bboxGeom.visible = false;
+
+    var geo = new THREE.EdgesGeometry( cube.geometry ); // or WireframeGeometry
+    var mat = new THREE.LineBasicMaterial( { color: 0x000000 } );
+    var wireframe = new THREE.LineSegments( geo, mat );
+    cube.add(wireframe);
   }
 
+  hideBbox() {
+    this.bboxGeom.visible = false;
+  }
+
+  showBbox() {
+    this.bboxGeom.visible = true;
+  }
+
+  displayBbox(threeScene) {
+    this.bboxGeom.visible = true;
+    threeScene.add(this.bboxGeom);
+  }
+
+  changeBboxVisibility() {
+    this.bboxGeom.visible = !this.bboxGeom.visible;
+  }
+
+  getBboxGeom() {
+    let geoVolumesBbox = new Array();
+    geoVolumesBbox.push(this.bboxGeom);
+    for (let child of this.children) {
+      geoVolumesBbox = geoVolumesBbox.concat(child.getBboxGeom());
+    }
+    return geoVolumesBbox;
+  }
+
+  getVisibleBboxGeom() {
+    let geoVolumesBbox = new Array();
+    if (this.bboxGeom.visible)
+      geoVolumesBbox.push(this.bboxGeom);
+    for (let child of this.children) {
+      geoVolumesBbox = geoVolumesBbox.concat(child.getVisibleBboxGeom());
+    }
+    return geoVolumesBbox;
+  }
   reprojectBbox(bbox, crs) {
-    let destCrs = crs ? crs : 'EPSG:4326';
+    let destCrs = crs ? crs : "EPSG:4326";
     let sourceCrs = this.extent.spatial.crs
       ? this.extent.spatial.crs
-      : 'EPSG:4326';
+      : "EPSG:4326";
     let minBbox, maxBbox;
     if (bbox.length == 6) {
-      minBbox = proj4.default(sourceCrs, destCrs).forward([bbox[0], bbox[1], bbox[2]]);
-      maxBbox = proj4.default(sourceCrs, destCrs).forward([bbox[3], bbox[4], bbox[5]]);
+      minBbox = proj4
+        .default(sourceCrs, destCrs)
+        .forward([bbox[0], bbox[1], bbox[2]]);
+      maxBbox = proj4
+        .default(sourceCrs, destCrs)
+        .forward([bbox[3], bbox[4], bbox[5]]);
     } else {
       minBbox = proj4.default(sourceCrs, destCrs).forward([bbox[0], bbox[1]]);
       maxBbox = proj4.default(sourceCrs, destCrs).forward([bbox[2], bbox[3]]);
@@ -88,7 +141,8 @@ export class GeoVolume {
     let childrenArray = new Array();
     if (jsonChildren) {
       for (let child of jsonChildren) {
-        childrenArray.push(new GeoVolume(child));
+        childrenArray.push(new GeoVolume(child,this.crs,this));
+        
       }
     }
     return childrenArray;
@@ -105,25 +159,26 @@ export class GeoVolume {
   }
 
   containGeovolumeById(id) {
-    if (this.id == id) return true;
+    if (this.id == id) return this;
+    let geoVolume = null;
     for (let child of this.children) {
-      return child.containGeovolumeById(id);
+      geoVolume = child.containGeovolumeById(id);
     }
-    return false;
+    return geoVolume;
   }
 
   getGeovolumeById(id) {
     if (this.id == id) return this;
+    let geoVolume = null;
     for (let child of this.children) {
-      return child.getGeovolumeById(id);
+      geoVolume = child.getGeovolumeById(id);
     }
-    return false;
+    return geoVolume;
   }
 
-  getContentByTitle(title){
+  getContentByTitle(title) {
     for (let c of this.content) {
-      if(c.title == title)
-        return c;
+      if (c.title == title) return c;
     }
     return false;
   }
