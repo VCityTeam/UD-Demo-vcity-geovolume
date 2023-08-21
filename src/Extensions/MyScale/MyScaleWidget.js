@@ -13,7 +13,7 @@ export class MyScaleWidget extends EventSender {
     this.itownsView = frame3DPlanar.itownsView;
     this.frame3DPlanar = frame3DPlanar;
 
-    frame3DPlanar.domElementUI.appendChild(this.rootHtml);
+    frame3DPlanar.rootHtml.appendChild(this.rootHtml);
 
     this.itownsView.addEventListener(itowns.VIEW_EVENTS.LAYERS_INITIALIZED, () => {
       this.update();

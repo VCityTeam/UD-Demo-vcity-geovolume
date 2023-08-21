@@ -26,11 +26,21 @@ export class GeoVolumeWindow extends EventSender {
     this.registerEvent(GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED);
     frame3DPlanar.rootHtml.appendChild(this.html());
 
-    let clickListener = (event) => {
+    this.mouseClickListener = (event) => {
+      this.onMouseClick(event);
       this.frame3DPlanar.itownsView.resize();
-      // this.onMouseClick(event);
     };
-    frame3DPlanar.rootHtml.addEventListener('mousedown', clickListener);
+    frame3DPlanar.rootWebGL.addEventListener(
+      "mousedown",
+      this.mouseClickListener
+    );
+
+    this.addEventListener(
+      GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+      (geovolume) => {
+        this.changeDisplayedGeovolume(geovolume);
+      }
+    );
   }
 
   focusGeovolume() {
@@ -68,6 +78,32 @@ export class GeoVolumeWindow extends EventSender {
       this.selectedGeoVolume.showBbox();
       this.itownsView.notifyChange();
       this.focusGeovolume(this.selectedGeoVolume);
+    }
+  }
+
+  onMouseClick(event) {
+    event.preventDefault();
+    let raycaster = new THREE.Raycaster();
+    let mouse3D = new THREE.Vector2(
+      (event.layerX / this.frame3DPlanar.rootWebGL.offsetWidth) * 2.0 - 1,
+      -(event.layerY / this.frame3DPlanar.rootWebGL.offsetHeight) * 2.0 +
+        1
+    );
+    raycaster.setFromCamera(mouse3D, this.itownsView.camera.camera3D);
+    let intersects = raycaster.intersectObjects(
+      this.geoVolumeSource.getVisibleGeoVolumesBboxGeom()
+    );
+    if (intersects.length > 0) {
+      if (
+        !this.selectedGeoVolume ||
+        intersects[0].object.geoVolume.id != this.selectedGeoVolume.id
+      ) {
+        this.sendEvent(
+          GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+          intersects[0].object.geoVolume
+        );
+      }
+      this.focusGeovolume();
     }
   }
 
@@ -208,35 +244,13 @@ export class GeoVolumeWindow extends EventSender {
       var itownsLayer = createC3DTilesLayer(content, this.itownsView);
       itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
 
-      // if (
-      //   content.variantIdentifier.includes("TileID") ||
-      //   content.variantIdentifier.includes("GMLID")
-      // ) {
-      //   this.itownsView
-      //     .getLayerById(content.id)
-      //     .addEventListener(
-      //       itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
-      //       ({ tileContent }) => {
-      //         this.appendWireframe(tileContent, 30, content.variantIdentifier);
-      //       }
-      //     );
-      // } else {
-      //   this.itownsView
-      //     .getLayerById(content.id)
-      //     .addEventListener(
-      //       itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
-      //       ({ tileContent }) => {
-      //         THREEUtil.appendWireframeToObject3D(tileContent);
-      //       }
-      //     );
-      // }
-
       const myStyle = new itowns.Style({
         fill: {
           color: function () {
             return "grey";
           },
           opacity: function (feature) {
+            console.log(itownsLayer);
             if (
               content.variantIdentifier.includes("GMLID") &&
               feature.getInfo().batchTable.gml_id == gml_id
@@ -411,14 +425,6 @@ export class GeoVolumeWindow extends EventSender {
         }
         li.appendChild(representationsList);
       }
-
-      // if (geovolume.children.length > 0) {
-      //   var ol = document.createElement('ol');
-      //   for (let child of geovolume.children) {
-      //     this.writeGeoVolume(child, ol);
-      //   }
-      //   li.appendChild(ol);
-      // }
 
       htmlParent.appendChild(li);
       this.sendEvent(GeoVolumeWindow.GEOVOLUME_SHOWN, geovolume);

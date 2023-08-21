@@ -2,7 +2,7 @@ import { EventSender } from "@ud-viz/shared/src";
 import { itowns } from "@ud-viz/browser/src";
 import { findChildByID } from "@ud-viz/browser/src";
 export class ScaleWidget extends EventSender {
-  constructor(geoVolumeWindow, frame3DPlanar) {
+  constructor(frame3DPlanar) {
     super();
     /** @type {HTMLElement} */
     this.rootHtml = document.createElement("div");
@@ -14,7 +14,7 @@ export class ScaleWidget extends EventSender {
     this.itownsView = frame3DPlanar.itownsView;
     this.frame3DPlanar = frame3DPlanar;
 
-    frame3DPlanar.domElementUI.appendChild(this.rootHtml);
+    frame3DPlanar.rootHtml.appendChild(this.rootHtml);
 
     this.itownsView.addEventListener(itowns.VIEW_EVENTS.INITIALIZED, () => {
       this.update();
