@@ -1628,7 +1628,7 @@ a {
   border-radius: 0 0 15px 0;
   border-top: none;
   border-left: none;
-  background-color: #cfcfcf;
+  background-color: rgba(95, 130, 182, 0.863);
   font-weight: 700;
 }
 
@@ -1643,27 +1643,25 @@ a {
   border: 2px solid #000000cc;
   border-radius: 15px 15px 0 0;
   border-bottom: none;
-  background-image: linear-gradient(rgba(35, 82, 153, 0.637), #4f6f9e00);
+  background-color : rgba(95, 130, 182, 0.863);
   font-weight: 700;
 }
 
-input[type="range"] {
+.myrange {
   appearance: slider-vertical;
   height: 90%;
-  width: 50%;
   position :absolute;
   top:50%;
-  transform: scaleX(-1) translate(80%,-50%);
+  transform: scaleX(-1) translate(-27%,-50%);
   color: rgb(0, 0, 0);
 }
 
 datalist {
   display: flex;
   flex-direction: column;
-  width: 50%;
+  width: fit-content;
   text-align: left;
   justify-content: space-between;
-  height: 90%;
   top:50%;
   position: absolute;
   transform: translate(0, -50%);
@@ -1680,12 +1678,12 @@ datalist {
   top: 50%;
   text-align: center;
   transform: translate(0, -50%);
-  width: 60px;
+  width: 260px;
   height: 700px;
   border: 2px solid #000000cc;
   border-radius: 15px 0 0 15px;
   border-right: none;
-  background-color: rgba(35, 82, 153, 0.3);
+  background-color: rgba(95, 130, 182, 0.863);
 
   font-weight: 700;
 }
@@ -1700,7 +1698,7 @@ datalist {
 }
 
 
-input[type=range]::-webkit-slider-runnable-track {
+.myrange::-webkit-slider-runnable-track {
   width:20px;
   margin-right:13px;
   cursor: pointer;
@@ -1709,15 +1707,18 @@ input[type=range]::-webkit-slider-runnable-track {
   border: 2px solid #000000;
 }
 
+#LOD-range {
+  position: absolute;
+  bottom:10%;
+}
 
-input[type=range]::-webkit-slider-thumb {
-  border: 1px solid #00001E;
-  height: 26px;
-  width: 26px;
-  border-radius: 15px;
-  background: #FFFFFF;
-  cursor: pointer;
-  -webkit-appearance: none;
+.lod-range {
+  position :absolute;
+  right: 0px;
+}
+
+#geovolume_lod_div{
+  position:relative;
 }
 
 
@@ -1728,7 +1729,7 @@ input[type=range]::-webkit-slider-thumb {
 } 
 
 .geovolume-el {
-  background-color: #a3a3a3;
+  background-color: rgba(132, 172, 233, 0.863);
   border-radius: 15px;
   margin: 10px;
   padding-left: 10px;
@@ -1745,4 +1746,9 @@ input[type=range]::-webkit-slider-thumb {
     border-radius: 0 0 0 15px;
     border-top: none;
     border-right: none;
+}
+
+
+.my-select {
+  background-color:#4d61a3a4;
 }

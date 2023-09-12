@@ -84,6 +84,7 @@ export class GeoVolume {
     threeScene.add(this.bboxGeom);
   }
 
+
   changeBboxVisibility() {
     this.bboxGeom.visible = !this.bboxGeom.visible;
   }
