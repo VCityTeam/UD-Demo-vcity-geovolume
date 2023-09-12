@@ -75,7 +75,6 @@ export class GeoVolumeWindow extends EventSender {
         "points",
         this.selectedGeoVolume.content
       );
-      console.log(sorted_contents);
       let width = Math.round(
         this.itownsView.getPixelsToMeters(this.itownsView.camera.width)
       );
