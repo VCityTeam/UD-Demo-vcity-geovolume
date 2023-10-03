@@ -44,9 +44,9 @@ export class GeoVolumeWindow extends EventSender {
       this.mouseClickListener
     );
 
-    this.itownsView.addEventListener(itowns.PLANAR_CONTROL_EVENT.MOVED, () => {
-      this.updateLOD();
-    });
+    // this.itownsView.addEventListener(itowns.PLANAR_CONTROL_EVENT.MOVED, () => {
+    //   this.updateLOD();
+    // });
 
     this.lodRangeMinElement.addEventListener("input", () => {
       this.lodRangeMinOutputElement.innerText = this.lodRangeMinElement.value;
@@ -141,7 +141,8 @@ export class GeoVolumeWindow extends EventSender {
       }
       this.selectedGeoVolume = geovolume;
       this.selectedGeoVolume.displayBbox(this.itownsView.scene);
-      this.selectedGeoVolume.showBbox();
+      // this.selectedGeoVolume.children[0].displayBbox(this.itownsView.scene);
+
       for (let children of this.selectedGeoVolume.children) {
         children.displayBbox(this.itownsView.scene);
         children.hideBbox();
@@ -368,6 +369,46 @@ export class GeoVolumeWindow extends EventSender {
     }
   }
 
+  isFeatureAChild(feature, el) {
+    if (feature.GUID == el.GUID) return true;
+    if (feature.children)
+      for (let child of feature.children)
+        if (this.isFeatureAChild(child, el)) return true;
+    return false;
+  }
+
+  isFeatureInHierarchy(hierarchy, el) {
+    for (let feature in hierarchy) {
+      if (this.isFeatureAChild(hierarchy[feature], el)) return true;
+    }
+    return false;
+  }
+
+  getFeatureAsChild(feature, el) {
+    if (feature.GUID == el.GUID) return feature;
+    if (feature.children) {
+      for (let child of feature.children) {
+        if (this.isFeatureAChild(child, el))
+          return this.getFeatureAsChild(child, el);
+      }
+    }
+  }
+
+  getFeatureInHierarchy(hierarchy, el) {
+    for (let feature in hierarchy) {
+      if (this.isFeatureAChild(hierarchy[feature], el)) {
+        return this.getFeatureAsChild(hierarchy[feature], el);
+      }
+    }
+  }
+
+  getBatchIdFromProps(batchTable, value) {
+    for (let i = 0; i < batchTable.instancesIdxs.length; i++) {
+      if (value == Object.values(batchTable.getInfoById(i))[0].GUID) return i;
+    }
+    return -1;
+  }
+
   visualize3DTilesContent(content) {
     if (content.url == undefined) content.url = content.href;
 
@@ -378,9 +419,51 @@ export class GeoVolumeWindow extends EventSender {
         var tileId = keys[0].split("=")[1];
         var batchId = keys[1].split("=")[1];
       }
+      const extensions = new itowns.C3DTExtensions();
+      extensions.registerExtension("3DTILES_batch_table_hierarchy", {
+        [itowns.C3DTilesTypes.batchtable]:
+          itowns.C3DTBatchTableHierarchyExtension,
+      });
 
-      var itownsLayer = createC3DTilesLayer(content, this.itownsView);
+      var itownsLayer = createC3DTilesLayer(
+        content,
+        this.itownsView,
+        extensions
+      );
       itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
+      
+      itownsLayer.hierarchy = [];
+      itownsLayer.addEventListener(
+        itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+        ({ tileContent }) => {
+          if (tileContent.batchTable) {
+            for (let i = 0; i < tileContent.batchTable.batchLength; i++) {
+              let elements =
+                tileContent.batchTable.extensions[
+                  "3DTILES_batch_table_hierarchy"
+                ].getInfoById(i);
+              let parent = null;
+              let elementsArray = [];
+              for (let el in elements) {
+                elements[el].class = el;
+                elements[el].tileId = tileContent.tileId;
+                elements[el].children = [];
+                elementsArray.unshift(elements[el]);
+              }
+              for (let el in elementsArray) {
+                el = elementsArray[el];
+                if (!this.isFeatureInHierarchy(itownsLayer.hierarchy, el)) {
+                  if (parent) {
+                    parent.children.push(el);
+                  } else itownsLayer.hierarchy.push(el);
+                }
+                parent = this.getFeatureInHierarchy(itownsLayer.hierarchy, el);
+              }
+            }
+            console.log(itownsLayer.hierarchy);
+          }
+        }
+      );
 
       const myStyle = new itowns.Style({
         fill: {
@@ -508,12 +591,6 @@ export class GeoVolumeWindow extends EventSender {
           bboxButton.classList.add("w3-grey");
         }
         geovolume.changeBboxVisibility();
-        if (geovolume.children[0] && geovolume.children[0].bboxGeom.visible) {
-          childrenButton.classList.remove("w3-grey");
-          for (let children of geovolume.children) {
-            children.hideBbox();
-          }
-        }
         this.itownsView.notifyChange();
       };
       li.appendChild(bboxButton);
@@ -529,9 +606,10 @@ export class GeoVolumeWindow extends EventSender {
             childrenButton.classList.remove("w3-grey");
           else {
             childrenButton.classList.add("w3-grey");
-            geovolume.hideBbox();
             bboxButton.classList.remove("w3-grey");
+            geovolume.hideBbox();
           }
+
           for (let children of geovolume.children) {
             children.changeBboxVisibility();
           }

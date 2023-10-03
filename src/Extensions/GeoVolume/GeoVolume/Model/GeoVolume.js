@@ -2,7 +2,7 @@ import { boxIntersect } from "box-intersect";
 import { THREE, proj4 } from "@ud-viz/browser";
 
 export class GeoVolume {
-  constructor(jsonObject,crs = "EPSG:4326",parent = null) {
+  constructor(jsonObject, crs = "EPSG:4326", parent = null) {
     this.id = jsonObject.id;
     this.title = jsonObject.title;
     this.collectionType = jsonObject.collectionType;
@@ -55,20 +55,18 @@ export class GeoVolume {
     );
     var cube = new THREE.Mesh(geom);
     cube.material = new THREE.MeshPhongMaterial();
-    // cube.material.color.setHex(Math.random() * 0xffffff);
     cube.material.transparent = true;
-    cube.material.opacity = 0.3;
+    cube.material.opacity = 0.5;
     cube.position.set(this.centroid[0], this.centroid[1], this.centroid[2]);
     cube.updateMatrixWorld();
 
+    var geo = new THREE.EdgesGeometry(cube.geometry); // or WireframeGeometry
+    var mat = new THREE.LineBasicMaterial({ color: 0x000000 });
+    var wireframe = new THREE.LineSegments(geo, mat);
+    cube.add(wireframe);
     cube.geoVolume = this;
     this.bboxGeom = cube;
     this.bboxGeom.visible = false;
-
-    var geo = new THREE.EdgesGeometry( cube.geometry ); // or WireframeGeometry
-    var mat = new THREE.LineBasicMaterial( { color: 0x000000 } );
-    var wireframe = new THREE.LineSegments( geo, mat );
-    cube.add(wireframe);
   }
 
   hideBbox() {
@@ -80,10 +78,10 @@ export class GeoVolume {
   }
 
   displayBbox(threeScene) {
-    this.bboxGeom.visible = true;
+    this.createBbox();
     threeScene.add(this.bboxGeom);
+    this.bboxGeom.visible = true;
   }
-
 
   changeBboxVisibility() {
     this.bboxGeom.visible = !this.bboxGeom.visible;
@@ -100,8 +98,7 @@ export class GeoVolume {
 
   getVisibleBboxGeom() {
     let geoVolumesBbox = new Array();
-    if (this.bboxGeom.visible)
-      geoVolumesBbox.push(this.bboxGeom);
+    if (this.bboxGeom.visible) geoVolumesBbox.push(this.bboxGeom);
     for (let child of this.children) {
       geoVolumesBbox = geoVolumesBbox.concat(child.getVisibleBboxGeom());
     }
@@ -142,8 +139,7 @@ export class GeoVolume {
     let childrenArray = new Array();
     if (jsonChildren) {
       for (let child of jsonChildren) {
-        childrenArray.push(new GeoVolume(child,this.crs,this));
-        
+        childrenArray.push(new GeoVolume(child, this.crs, this));
       }
     }
     return childrenArray;
