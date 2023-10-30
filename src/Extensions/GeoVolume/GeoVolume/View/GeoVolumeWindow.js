@@ -181,7 +181,7 @@ export class GeoVolumeWindow extends EventSender {
     this.geoVolumeSource.getgeoVolumes().then(() => {
       this.sendEvent(
         GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-        this.geoVolumeSource.collection[0].children[1].children[0]
+        this.geoVolumeSource.collection[0].children[0].children[0]
       );
       this.itownsView.notifyChange();
     });
@@ -431,39 +431,46 @@ export class GeoVolumeWindow extends EventSender {
         extensions
       );
       itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
-      
-      itownsLayer.hierarchy = [];
-      itownsLayer.addEventListener(
-        itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
-        ({ tileContent }) => {
-          if (tileContent.batchTable) {
-            for (let i = 0; i < tileContent.batchTable.batchLength; i++) {
-              let elements =
-                tileContent.batchTable.extensions[
-                  "3DTILES_batch_table_hierarchy"
-                ].getInfoById(i);
-              let parent = null;
-              let elementsArray = [];
-              for (let el in elements) {
-                elements[el].class = el;
-                elements[el].tileId = tileContent.tileId;
-                elements[el].children = [];
-                elementsArray.unshift(elements[el]);
-              }
-              for (let el in elementsArray) {
-                el = elementsArray[el];
-                if (!this.isFeatureInHierarchy(itownsLayer.hierarchy, el)) {
-                  if (parent) {
-                    parent.children.push(el);
-                  } else itownsLayer.hierarchy.push(el);
+
+      if (content.id.includes("bth")) {
+        itownsLayer.hierarchy = [];
+        itownsLayer.addEventListener(
+          itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+          ({ tileContent }) => {
+            if (tileContent.batchTable) {
+              for (let i = 0; i < tileContent.batchTable.batchLength; i++) {
+                let elements =
+                  tileContent.batchTable.extensions[
+                    "3DTILES_batch_table_hierarchy"
+                  ].getInfoById(i);
+                let parent = null;
+                let elementsArray = [];
+                for (let el in elements) {
+                  elements[el].class = el;
+                  elements[el].tileId = [];
+                  elements[el].children = [];
+                  elementsArray.unshift(elements[el]);
                 }
-                parent = this.getFeatureInHierarchy(itownsLayer.hierarchy, el);
+                for (let el in elementsArray) {
+                  el = elementsArray[el];
+                  if (!this.isFeatureInHierarchy(itownsLayer.hierarchy, el)) {
+                    if (parent) {
+                      parent.children.push(el);
+                    } else itownsLayer.hierarchy.push(el);
+                  }
+                  parent = this.getFeatureInHierarchy(
+                    itownsLayer.hierarchy,
+                    el
+                  );
+                  if (!parent.tileId.includes(tileContent.tileId))
+                    parent.tileId.push(tileContent.tileId);
+                }
               }
+              this.update3DTilesHTMLHierarchy(tileContent.layer);
             }
-            console.log(itownsLayer.hierarchy);
           }
-        }
-      );
+        );
+      }
 
       const myStyle = new itowns.Style({
         fill: {
@@ -471,6 +478,7 @@ export class GeoVolumeWindow extends EventSender {
             return "grey";
           },
           opacity: function (feature) {
+            feature.toHide = true;
             if (
               content.variantIdentifier.includes("GMLID") &&
               feature.getInfo().batchTable.gml_id == gml_id
@@ -481,9 +489,24 @@ export class GeoVolumeWindow extends EventSender {
               content.variantIdentifier.includes("TileID") &&
               feature.tileId == tileId &&
               feature.batchId == batchId
-            )
+            ) {
               return 1;
-
+            }
+            if (content.variantIdentifier.includes("external")) {
+              if (
+                feature.getInfo().batchTable.properties &&
+                feature.getInfo().batchTable.properties[0]
+              ) {
+                feature.getInfo().batchTable.properties[0].map((value) => {
+                  if (Array.isArray(value)) {
+                    if (value[0] == "IsExternal" && value[1] == true) {
+                      feature.toHide = false;
+                    }
+                  }
+                });
+              }
+            }
+            if (!feature.toHide) return 1;
             if (content.variantIdentifier == "file") return 1;
             return 0;
           },
@@ -491,6 +514,43 @@ export class GeoVolumeWindow extends EventSender {
       });
 
       this.itownsView.getLayerById(content.id).style = myStyle;
+    }
+  }
+
+  createHTLMhierarchy(el) {
+    let details = document.createElement("details");
+    let summary = document.createElement("summary");
+    summary.innerText = el.class;
+    details.appendChild(summary);
+    let displayDetails = false;
+    for (let child in el.children) {
+      if (el.children[child].children.length > 0) {
+        details.appendChild(this.createHTLMhierarchy(el.children[child]));
+        displayDetails = true;
+      }
+    }
+
+    if (!displayDetails) {
+      details = document.createElement("div");
+      details.innerText = el.class;
+    }
+
+    return details;
+  }
+
+  update3DTilesHTMLHierarchy(layer) {
+    if (document.getElementById(layer.id + "_hierarchy"))
+      document.getElementById(layer.id + "_hierarchy").remove();
+    let details = document.createElement("details");
+    details.id = layer.id + "_hierarchy";
+    let summary = document.createElement("summary");
+    summary.innerText = "Hierarchy";
+    details.appendChild(summary);
+    if (layer.hierarchy) {
+      for (let el in layer.hierarchy) {
+        details.appendChild(this.createHTLMhierarchy(layer.hierarchy[el]));
+      }
+      document.getElementById(layer.id).appendChild(details);
     }
   }
 
@@ -511,11 +571,11 @@ export class GeoVolumeWindow extends EventSender {
     let showButton = document.getElementById(content.id + "_show_button");
     if (showButton) {
       if (this.itownsView.getLayerById(content.id) != undefined) {
-        showButton.children[0].src = "../assets/icons/eye-slash.svg";
-        showButton.classList.add("w3-grey");
-      } else {
         showButton.classList.remove("w3-grey");
         showButton.children[0].src = "../assets/icons/eye.svg";
+      } else {
+        showButton.children[0].src = "../assets/icons/eye-slash.svg";
+        showButton.classList.add("w3-grey");
       }
     }
   }
@@ -523,11 +583,11 @@ export class GeoVolumeWindow extends EventSender {
   createShowButton(c, isPc = false) {
     let visualisator = document.createElement("button");
     visualisator.className =
-      "w3-btn w3-medium w3-bar-item w3-round w3-border w3-right";
+      "w3-btn w3-medium w3-bar-item w3-round w3-border w3-right w3-grey";
     visualisator.id = `${c.id}_show_button`;
     var logo = document.createElement("img");
     logo.width = "20";
-    logo.src = "../assets/icons/eye.svg";
+    logo.src = "../assets/icons/eye-slash.svg";
     visualisator.appendChild(logo);
     visualisator.onclick = () => {
       if (this.itownsView.getLayerById(c.id) == undefined) {
@@ -552,21 +612,21 @@ export class GeoVolumeWindow extends EventSender {
         }
       }
 
-      // if (geovolume.parent) {
-      //   var button_parent = document.createElement("button");
-      //   button_parent.className = "w3-btn w3-round w3-border";
-      //   logo = document.createElement("img");
-      //   logo.src = "../assets/icons/return.svg";
-      //   logo.width = "20";
-      //   button_parent.appendChild(logo);
-      //   button_parent.onclick = () => {
-      //     this.sendEvent(
-      //       GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-      //       geovolume.parent
-      //     );
-      //   };
-      //   li.appendChild(button_parent);
-      // }
+      if (geovolume.parent) {
+        var button_parent = document.createElement("button");
+        button_parent.className = "w3-btn w3-round w3-border";
+        logo = document.createElement("img");
+        logo.src = "../assets/icons/return.svg";
+        logo.width = "20";
+        button_parent.appendChild(logo);
+        button_parent.onclick = () => {
+          this.sendEvent(
+            GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+            geovolume.parent
+          );
+        };
+        li.appendChild(button_parent);
+      }
 
       var div_name = document.createElement("div");
       var a = document.createElement("a");
@@ -626,20 +686,20 @@ export class GeoVolumeWindow extends EventSender {
           var representationEl = document.createElement("li");
           representationEl.id = c.id;
           representationEl.className = "w3-bar";
-          var a_name = document.createElement("a");
+          var a_name = document.createElement("div");
           a_name.innerText = c.title;
           a_name.className = "w3-bar-item";
           representationEl.appendChild(a_name);
           if (c.type.includes("3dtiles")) {
             let visualisator = this.createShowButton(c);
-            representationEl.append(visualisator);
+            a_name.append(visualisator);
           } else if (c.type.includes("pnts")) {
             let visualisator = this.createShowButton(c, true);
-            representationEl.append(visualisator);
+            a_name.append(visualisator);
           } else if (c.type.includes("sensor")) {
             var sensorDiv = document.createElement("a");
             sensorDiv.id = "geoVolume_sensor";
-            representationEl.append(sensorDiv);
+            a_name.append(sensorDiv);
           }
           representationsList.appendChild(representationEl);
         }
