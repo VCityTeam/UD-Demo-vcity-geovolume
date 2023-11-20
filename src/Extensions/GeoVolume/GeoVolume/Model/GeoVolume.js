@@ -1,6 +1,6 @@
 import { boxIntersect } from "box-intersect";
-import { THREE, proj4 } from "@ud-viz/browser";
-
+import * as THREE from "three";
+import * as proj4 from "proj4";
 export class GeoVolume {
   constructor(jsonObject, crs = "EPSG:4326", parent = null) {
     this.id = jsonObject.id;

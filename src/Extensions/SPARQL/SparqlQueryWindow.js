@@ -1,12 +1,7 @@
-import { focusCameraOn, findChildByID } from "@ud-viz/browser/";
-import { loadTextFile } from "@ud-viz/browser/src/FileUtil";
-import { JsonRenderer } from "@ud-viz/browser/src/Widget/Server/SPARQL/View/JsonRenderer";
-import { Table } from "@ud-viz/browser/src/Widget/Server/SPARQL/Model/Table";
-import { Graph } from "@ud-viz/browser/src/Widget/Server/SPARQL/Model/Graph";
-import * as URI from "@ud-viz/browser/src/Widget/Server/SPARQL/Model/URI";
-import { EventSender } from "@ud-viz/shared";
-import { SparqlEndpointResponseProvider } from "@ud-viz/browser/src/Widget/Server/Server";
-import { itowns } from "@ud-viz/browser/";
+import { loadTextFile, focusCameraOn, tokenizeURI } from '@ud-viz/utils_browser';
+import { findChildByID } from "../GeoVolume/Utils/htmlUtils";
+import { JsonRenderer,Table,Graph,SparqlEndpointResponseProvider } from "@ud-viz/widget_sparql";
+import * as itowns from "itowns";
 import * as THREE from "three";
 import "./SparqlQueryWindow.css";
 import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
@@ -15,7 +10,7 @@ import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
  * The SPARQL query window class which provides the user interface for querying
  * a SPARQL endpoint and displaying the endpoint response.
  */
-export class SparqlQueryWindow extends EventSender {
+export class SparqlQueryWindow {
   /**
    * Creates a SPARQL query window.
    *
@@ -36,7 +31,6 @@ export class SparqlQueryWindow extends EventSender {
     configSparqlWidget,
     geoVolumeWidget
   ) {
-    super();
 
     /** @type {HTMLElement} */
     this.domElement = document.createElement("div");
@@ -141,7 +135,7 @@ export class SparqlQueryWindow extends EventSender {
             for (const [batchId, c3DTileFeature] of tileC3DTileFeatures) {
               if (
                 c3DTileFeature.getInfo().batchTable["gml_id"] ==
-                URI.tokenizeURI(node_text).id
+                tokenizeURI(node_text).id
               ) {
                 result = {
                   feature: c3DTileFeature,

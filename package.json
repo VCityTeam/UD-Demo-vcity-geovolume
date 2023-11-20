@@ -15,7 +15,8 @@
   "license": "ISC",
   "dependencies": {
     "@egjs/hammerjs": "2.0.17",
-    "@ud-viz/browser": "3.1.0",
+    "@ud-viz/utils_browser": "4.0.1",
+    "@ud-viz/widget_sparql":"4.0.1",
     "box-intersect": "^1.0.2",
     "buffer": "^6.0.3",
     "d3": "^7.7.0",

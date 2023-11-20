@@ -1,9 +1,9 @@
-import { EventSender } from "@ud-viz/shared/src";
-import { itowns } from "@ud-viz/browser/src";
-import { findChildByID } from "@ud-viz/browser/src";
-export class ScaleWidget extends EventSender {
+import * as itowns from "itowns";
+
+import { findChildByID } from "../GeoVolume/Utils/htmlUtils"; 
+
+export class ScaleWidget {
   constructor(frame3DPlanar) {
-    super();
     /** @type {HTMLElement} */
     this.rootHtml = document.createElement("div");
     this.rootHtml.innerHTML = this.innerContentHtml;

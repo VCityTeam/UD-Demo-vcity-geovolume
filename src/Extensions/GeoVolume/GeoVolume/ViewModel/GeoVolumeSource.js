@@ -1,4 +1,5 @@
-import {THREE,itowns}  from '@ud-viz/browser';
+import * as THREE from "three";
+import * as itowns from "itowns";
 import { GeoVolume } from '../Model/GeoVolume';
 import * as jquery from 'jquery';
 /**

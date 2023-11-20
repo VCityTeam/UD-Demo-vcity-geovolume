@@ -1,10 +1,8 @@
-import { EventSender } from "@ud-viz/shared/src";
-import { itowns } from "@ud-viz/browser/src";
+import * as itowns from "itowns";
+import { findChildByID } from "../GeoVolume/Utils/htmlUtils"; 
 import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
-import { findChildByID } from "@ud-viz/browser/src";
-export class MyScaleWidget extends EventSender {
+export class MyScaleWidget  {
   constructor(geoVolumeWindow, frame3DPlanar) {
-    super();
     /** @type {HTMLElement} */
     this.rootHtml = document.createElement("div");
     this.rootHtml.innerHTML = this.innerContentHtml;

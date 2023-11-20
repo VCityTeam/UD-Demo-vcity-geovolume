@@ -1,15 +1,24 @@
-import {
-  itowns,
-  THREE,
-  createC3DTilesLayer,
-  THREEUtil,
-  findChildByID,
-} from "@ud-viz/browser";
-import { EventSender } from "@ud-viz/shared";
+import * as THREE from "three";
+import * as itowns from "itowns";
+import { findChildByID } from "../../Utils/htmlUtils";
 
 import { refinementFiltered } from "../../Utils/Refinement";
-export class GeoVolumeWindow extends EventSender {
-  constructor(geoVolumeSource, frame3DPlanar) {
+
+var ifcColor = {
+  IfcWall: 0xfcf8c9,
+  IfcSlab: 0xfcf8c9,
+  IfcPipe: 0xff7f50,
+  IfcSpace: "yellow",
+  IfcWindow: 0x36b9d6,
+};
+
+var ifcOpacity = {
+  IfcWindow: 0.4,
+  IfcBuildingElement: 0,
+  IfcSpace: 0.5,
+};
+export class GeoVolumeWindow extends THREE.EventDispatcher {
+  constructor(geoVolumeSource, itownsView) {
     super();
     /** @type {HTMLElement} */
     this.rootHtml = document.createElement("div");
@@ -18,28 +27,22 @@ export class GeoVolumeWindow extends EventSender {
     this.rootHtml.className = "w3-round-xlarge";
     this.geoVolumeSource = geoVolumeSource;
     this.selectedGeoVolume = null;
-    this.itownsView = frame3DPlanar.itownsView;
-    this.frame3DPlanar = frame3DPlanar;
-
-    this.registerEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
-    this.registerEvent(GeoVolumeWindow.GEOVOLUME_SHOWN);
-    this.registerEvent(GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED);
+    this.itownsView = itownsView;
 
     this.addEventListener(
       GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-      (geovolume) => {
-        this.frame3DPlanar.itownsView.resize();
-        this.changeDisplayedGeovolume(geovolume);
+      (event) => {
+        this.itownsView.resize();
+        this.changeDisplayedGeovolume(event.message);
       }
     );
-
-    frame3DPlanar.rootHtml.appendChild(this.html());
+    this.itownsView.domElement.appendChild(this.html());
 
     this.mouseClickListener = (event) => {
       this.onMouseClick(event);
-      this.frame3DPlanar.itownsView.resize();
+      this.itownsView.resize();
     };
-    frame3DPlanar.rootWebGL.addEventListener(
+    this.itownsView.domElement.addEventListener(
       "mousedown",
       this.mouseClickListener
     );
@@ -113,6 +116,8 @@ export class GeoVolumeWindow extends EventSender {
       let box3 = new THREE.Box3().setFromObject(
         this.selectedGeoVolume.bboxGeom
       );
+      this.itownsView.resize();
+
       let size = new THREE.Vector3();
       box3.getSize(size);
       const maxDim = Math.max(size.x, size.y);
@@ -156,8 +161,8 @@ export class GeoVolumeWindow extends EventSender {
     event.preventDefault();
     let raycaster = new THREE.Raycaster();
     let mouse3D = new THREE.Vector2(
-      (event.layerX / this.frame3DPlanar.rootWebGL.offsetWidth) * 2.0 - 1,
-      -(event.layerY / this.frame3DPlanar.rootWebGL.offsetHeight) * 2.0 + 1
+      (event.layerX / this.itownsView.domElement.offsetWidth) * 2.0 - 1,
+      -(event.layerY / this.itownsView.domElement.offsetHeight) * 2.0 + 1
     );
     raycaster.setFromCamera(mouse3D, this.itownsView.camera.camera3D);
     let intersects = raycaster.intersectObjects(
@@ -168,21 +173,31 @@ export class GeoVolumeWindow extends EventSender {
         !this.selectedGeoVolume ||
         intersects[0].object.geoVolume.id != this.selectedGeoVolume.id
       ) {
-        this.sendEvent(
-          GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-          intersects[0].object.geoVolume
-        );
+        this.dispatchEvent({
+          type: GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+          message: intersects[0].object.geoVolume,
+        });
         this.focusGeovolume();
       }
     }
+    intersects = this.itownsView.pickObjectsAt(
+      event,
+      0,
+      this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer)
+    );
+    // const intersectsFeatures = this.itownsView.pickFeaturesAt(
+    //   event,
+    //   0,
+    //   this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer)
+    // );
   }
 
   html() {
     this.geoVolumeSource.getgeoVolumes().then(() => {
-      this.sendEvent(
-        GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-        this.geoVolumeSource.collection[0].children[0].children[0]
-      );
+      this.dispatchEvent({
+        type: GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+        message: this.geoVolumeSource.collection[0].children[0].children[0],
+      });
       this.itownsView.notifyChange();
     });
     return this.rootHtml;
@@ -425,13 +440,19 @@ export class GeoVolumeWindow extends EventSender {
           itowns.C3DTBatchTableHierarchyExtension,
       });
 
-      var itownsLayer = createC3DTilesLayer(
-        content,
-        this.itownsView,
-        extensions
+      var itownsLayer = new itowns.C3DTilesLayer(
+        content["id"],
+        {
+          name: content["id"],
+          source: new itowns.C3DTilesSource({
+            url: content["url"],
+          }),
+          registeredExtensions: extensions,
+        },
+        this.itownsView
       );
-      itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
 
+      itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
       if (content.id.includes("bth")) {
         itownsLayer.hierarchy = [];
         itownsLayer.addEventListener(
@@ -474,7 +495,11 @@ export class GeoVolumeWindow extends EventSender {
 
       const myStyle = new itowns.Style({
         fill: {
-          color: function () {
+          color: function (feature) {
+            if (feature.getInfo().batchTable.classe) {
+              if (ifcColor[feature.getInfo().batchTable.classe])
+                return ifcColor[feature.getInfo().batchTable.classe];
+            }
             return "grey";
           },
           opacity: function (feature) {
@@ -507,7 +532,13 @@ export class GeoVolumeWindow extends EventSender {
               }
             }
             if (!feature.toHide) return 1;
-            if (content.variantIdentifier == "file") return 1;
+            if (content.variantIdentifier == "file") {
+              if (feature.getInfo().batchTable.classe) {
+                if (ifcOpacity[feature.getInfo().batchTable.classe])
+                  return ifcOpacity[feature.getInfo().batchTable.classe];
+              }
+              return 1;
+            }
             return 0;
           },
         },
@@ -620,10 +651,10 @@ export class GeoVolumeWindow extends EventSender {
         logo.width = "20";
         button_parent.appendChild(logo);
         button_parent.onclick = () => {
-          this.sendEvent(
-            GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-            geovolume.parent
-          );
+          this.dispatchEvent({
+            type: GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+            message: geovolume.parent,
+          });
         };
         li.appendChild(button_parent);
       }
@@ -707,7 +738,6 @@ export class GeoVolumeWindow extends EventSender {
       }
 
       htmlParent.appendChild(li);
-      this.sendEvent(GeoVolumeWindow.GEOVOLUME_SHOWN, geovolume);
     }
   }
 
@@ -724,7 +754,6 @@ export class GeoVolumeWindow extends EventSender {
     let list = this.geoVolumeListElement;
     list.innerHTML = "";
     this.writeGeoVolume(geoVolume, list);
-    this.sendEvent(GeoVolumeWindow.GEOVOLUME_COLLECTION_UPDATED);
   }
 
   deleteBboxGeomOfGeovolumes() {

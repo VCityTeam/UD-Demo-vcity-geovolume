@@ -1,40 +1,16 @@
 /** @format */
 
-import * as udvizBrowser from "@ud-viz/browser";
+import { loadMultipleJSON, initScene } from "@ud-viz/utils_browser";
+import * as itowns from "itowns";
+import * as widgetSPARQL from "@ud-viz/widget_sparql";
+import * as proj4 from "proj4";
+
 import { GeoVolumeModule } from "./Extensions/GeoVolume/GeoVolumeModule";
 import { SensorExtension } from "./Extensions/Sensor/SensorExtension";
 import { SparqlQueryWindow } from "./Extensions/SPARQL/SparqlQueryWindow";
 import css from "./style.css";
 import { ScaleWidget } from "./Extensions/Scale/ScaleWidget";
 import { MyScaleWidget } from "./Extensions/MyScale/MyScaleWidget";
-import {
-  loadJSON,
-  computeFileNameFromPath,
-} from "@ud-viz/browser/src/FileUtil";
-
-
-function loadMultipleJSON(urlArray) {
-  return new Promise((resolve, reject) => {
-    const promises = [];
-    const result = {};
-
-    urlArray.forEach((url) => {
-      promises.push(
-        loadJSON(url).then((jsonResult) => {
-          const key = computeFileNameFromPath(url);
-          if (result[key]) throw new Error("conflict same key");
-          result[key] = jsonResult;
-        })
-      );
-    });
-
-    Promise.all(promises)
-      .then(() => {
-        resolve(result);
-      })
-      .catch(reject);
-  });
-}
 
 loadMultipleJSON([
   "../assets/config/scene.json",
@@ -50,53 +26,84 @@ loadMultipleJSON([
   "../assets/config/styles.json",
   "../assets/config/layer/3DTiles.json",
 ]).then((configs) => {
-  udvizBrowser.proj4.default.defs(
+  proj4.default.defs(
     "EPSG:3946",
     "+proj=lcc +lat_1=45.25 +lat_2=46.75 +lat_0=46 +lon_0=3 +x_0=1700000 +y_0=5200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
   );
 
-  const extent = new udvizBrowser.itowns.Extent(
+  const extent = new itowns.Extent(
     configs["extent_lyon"].crs,
     parseInt(configs["extent_lyon"].west),
     parseInt(configs["extent_lyon"].east),
     parseInt(configs["extent_lyon"].south),
     parseInt(configs["extent_lyon"].north)
   );
+  
+  // create a itowns planar view
+  const viewDomElement = document.createElement("div");
+  viewDomElement.classList.add("full_screen");
+  document.body.appendChild(viewDomElement);
+  const view = new itowns.PlanarView(viewDomElement, extent);
+  // init scene 3D
+  initScene(view.camera.camera3D, view.mainLoop.gfxEngine.renderer, view.scene);
 
-  const frame3DPlanar = new udvizBrowser.Frame3DPlanar(
-    extent,
-    configs["frame3D_planars"][0]
+  view.addLayer(
+    new itowns.ColorLayer(configs["base_maps"][0]["layer_name"], {
+      updateStrategy: {
+        type: itowns.STRATEGY_DICHOTOMY,
+        options: {},
+      },
+      source: new itowns.WMSSource({
+        extent: extent,
+        name: configs["base_maps"][0]["name"],
+        url: configs["base_maps"][0]["url"],
+        version: configs["base_maps"][0]["version"],
+        crs: extent.crs,
+        format: configs["base_maps"][0]["format"],
+      }),
+      transparent: true,
+    })
   );
 
-  // ADD BASE MAP
-  udvizBrowser.addBaseMapLayer(
-    configs["base_maps"][0],
-    frame3DPlanar.itownsView,
-    extent
-  );
-
-  udvizBrowser.addElevationLayer(
-    configs["elevation"],
-    frame3DPlanar.itownsView,
-    extent
+  const isTextureFormat =
+    configs["elevation"]["format"] == "image/jpeg" ||
+    configs["elevation"]["format"] == "image/png";
+  view.addLayer(
+    new itowns.ElevationLayer(configs["elevation"]["layer_name"], {
+      useColorTextureElevation: isTextureFormat,
+      colorTextureElevationMinZ: isTextureFormat
+        ? configs["elevation"]["colorTextureElevationMinZ"]
+        : null,
+      colorTextureElevationMaxZ: isTextureFormat
+        ? configs["elevation"]["colorTextureElevationMaxZ"]
+        : null,
+      source: new itowns.WMSSource({
+        extent: extent,
+        url: configs["elevation"]["url"],
+        name: configs["elevation"]["name"],
+        crs: extent.crs,
+        heightMapWidth: 256,
+        format: configs["elevation"]["format"],
+      }),
+    })
   );
 
   const geoVolumeModule = new GeoVolumeModule(
     configs["geovolume_server"],
-    frame3DPlanar
+    view
   );
 
-  const sparqlWidget = new SparqlQueryWindow(
-    new udvizBrowser.Widget.Server.SparqlEndpointResponseProvider(
-      configs["sparql_server"]
-    ),
-    frame3DPlanar,
-    configs["sparql_widget"],
-    geoVolumeModule.view
-  );
+  // const sparqlWidget = new SparqlQueryWindow(
+  //   new udvizBrowser.Widget.Server.SparqlEndpointResponseProvider(
+  //     configs["sparql_server"]
+  //   ),
+  //   frame3DPlanar,
+  //   configs["sparql_widget"],
+  //   geoVolumeModule.view
+  // );
 
-  const scaleWidget = new ScaleWidget(frame3DPlanar);
-  const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view,frame3DPlanar);
+  // const scaleWidget = new ScaleWidget(frame3DPlanar);
+  // const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view,frame3DPlanar);
 
   // //// LAYER CHOICE MODULE
   // const layerChoice = new udvizBrowser.Widget.LayerChoice(

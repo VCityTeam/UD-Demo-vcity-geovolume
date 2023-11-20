@@ -9,15 +9,15 @@ export class GeoVolumeModule {
    * Creates a new GeoVolume Module.
    *
    */
-  constructor(geoVolumeConfig,frame3DPlanar) {
-    this.frame3DPlanar = frame3DPlanar;
+  constructor(geoVolumeConfig,view) {
 
+    this.view = view;
     this.geoVolumeSource = new GeoVolumeSource({
       name: 'geoVolumeSource',
       url: geoVolumeConfig.url,
     },
-    this.frame3DPlanar.itownsView);
+    view);
 
-    this.view = new GeoVolumeWindow(this.geoVolumeSource,this.frame3DPlanar);
+    this.window = new GeoVolumeWindow(this.geoVolumeSource,view);
   }
 }
