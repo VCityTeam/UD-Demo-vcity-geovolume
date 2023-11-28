@@ -14,9 +14,91 @@ var ifcColor = {
 
 var ifcOpacity = {
   IfcWindow: 0.4,
-  IfcBuildingElement: 0,
+  IfcShadingDevice: 0,
   IfcSpace: 0.5,
+  IfcBuildingElementProxy: 0,
+  IfcOpeningElement: 0,
+  IfcPlate: 0,
 };
+
+function appendWireframe(object3D, variantIdentifier, threshOldAngle = 30) {
+  var gml_id = variantIdentifier.split("=")[1];
+  if (variantIdentifier.includes("TileID")) {
+    var keys = variantIdentifier.split("&");
+    var variant_tileId = keys[0].split("=")[1];
+    var variant_batchId = keys[1].split("=")[1];
+  }
+  if (
+    !isNaN(object3D.tileId) &&
+    object3D.tileId >= 0 &&
+    object3D.layer.tilesC3DTileFeatures.has(object3D.tileId)
+  ) {
+    object3D.traverse((child) => {
+      if (
+        child.geometry &&
+        child.geometry.isBufferGeometry &&
+        !child.userData.isWireframe &&
+        !child.userData.hasWireframe
+      ) {
+        // This event can be triggered multiple times, even when the geometry is loaded.
+        // This bool avoid to create multiple wireframes for one geometry
+        child.userData.hasWireframe = true;
+        for (const [
+          // eslint-disable-next-line no-unused-vars
+          batchId,
+          c3DTFeature,
+        ] of object3D.layer.tilesC3DTileFeatures.get(object3D.tileId)) {
+          if (
+            !(
+              c3DTFeature.getInfo().batchTable.classe &&
+              c3DTFeature.getInfo().batchTable.classe in ifcOpacity &&
+              ifcOpacity[c3DTFeature.getInfo().batchTable.classe] == 0
+            )
+          ) {
+            if (
+              variantIdentifier == "file" ||
+              (variantIdentifier.includes("GMLID") &&
+                c3DTFeature.getInfo().batchTable.gml_id == gml_id) ||
+              (variantIdentifier.includes("TileID") &&
+                c3DTFeature.tileId == variant_tileId &&
+                c3DTFeature.batchId == variant_batchId)
+            ) {
+              let positionByAttribute = new THREE.BufferAttribute(
+                child.geometry.attributes.position.array.slice(
+                  c3DTFeature.groups[0].start * 3,
+                  (c3DTFeature.groups[0].start + c3DTFeature.groups[0].count) *
+                    3 +
+                    1
+                ),
+                3
+              );
+              const mesh = new THREE.BufferGeometry();
+              mesh.setAttribute("position", positionByAttribute);
+              // THREE.EdgesGeometry needs triangle indices to be created.
+              // Create a new array for the indices
+              const indices = [];
+
+              // Iterate over every group of three vertices in the unindexed mesh and add the corresponding indices to the indices array
+              for (let j = 0; j < mesh.attributes.position.count; j += 3) {
+                indices.push(j, j + 1, j + 2);
+              }
+              mesh.setIndex(indices);
+
+              // Create the wireframe geometry
+              const edges = new THREE.EdgesGeometry(mesh, threshOldAngle);
+
+              const mat = new THREE.LineBasicMaterial({ color: 0x000000 });
+              const wireframe = new THREE.LineSegments(edges, mat);
+              wireframe.userData.isWireframe = true;
+              child.add(wireframe);
+              wireframe.updateWorldMatrix(false, false);
+            }
+          }
+        }
+      }
+    });
+  }
+}
 export class GeoVolumeWindow extends THREE.EventDispatcher {
   constructor(geoVolumeSource, itownsView) {
     super();
@@ -146,7 +228,6 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
       }
       this.selectedGeoVolume = geovolume;
       this.selectedGeoVolume.displayBbox(this.itownsView.scene);
-      // this.selectedGeoVolume.children[0].displayBbox(this.itownsView.scene);
 
       for (let children of this.selectedGeoVolume.children) {
         children.displayBbox(this.itownsView.scene);
@@ -180,23 +261,30 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
         this.focusGeovolume();
       }
     }
-    intersects = this.itownsView.pickObjectsAt(
-      event,
-      0,
-      this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer)
-    );
-    // const intersectsFeatures = this.itownsView.pickFeaturesAt(
-    //   event,
-    //   0,
-    //   this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer)
-    // );
+    if (
+      this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer).length > 0
+    ) {
+      const intersectsFeatures = this.itownsView.pickObjectsAt(
+        event,
+        0,
+        this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer)
+      );
+      if (intersectsFeatures.length) {
+        // get featureClicked
+        const featureClicked =
+          intersectsFeatures[0].layer.getC3DTileFeatureFromIntersectsArray(
+            intersectsFeatures
+          );
+        console.log(featureClicked.getInfo());
+      }
+    }
   }
 
   html() {
     this.geoVolumeSource.getgeoVolumes().then(() => {
       this.dispatchEvent({
         type: GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-        message: this.geoVolumeSource.collection[0].children[0].children[0],
+        message: this.geoVolumeSource.collection[0],
       });
       this.itownsView.notifyChange();
     });
@@ -214,13 +302,13 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
           </div>
           <div style="position:relative;">
           <label for="LOD-range-max">Scale max : </label>
-          <output id="output_scale_max">22</output>
-          <input type="range" class="lod-range" id="LOD-range-max" min="0" max="26" step="1" value="22"/>
+          <output id="output_scale_max">21</output>
+          <input type="range" class="lod-range" id="LOD-range-max" min="0" max="26" step="1" value="21"/>
           </div>
           <div style="position:relative;">
           <label for="LOD-range-min">Scale min : </label>
-          <output id="output_scale_min">15</output>
-          <input type="range" class="lod-range" id="LOD-range-min" min="0" max="26" step="1" value="15"/>
+          <output id="output_scale_min">14</output>
+          <input type="range" class="lod-range" id="LOD-range-min" min="0" max="26" step="1" value="14"/>
           </div>
 
           <div>
@@ -313,77 +401,6 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
     }
   }
 
-  appendWireframe(object3D, threshOldAngle = 30, variantIdentifier) {
-    var gml_id = variantIdentifier.split("=")[1];
-    if (variantIdentifier.includes("TileID")) {
-      var keys = variantIdentifier.split("&");
-      var variant_tileId = keys[0].split("=")[1];
-      var variant_batchId = keys[1].split("=")[1];
-    }
-    if (
-      !isNaN(object3D.tileId) &&
-      object3D.tileId >= 0 &&
-      object3D.layer.tilesC3DTileFeatures.has(object3D.tileId)
-    ) {
-      object3D.traverse((child) => {
-        if (
-          child.geometry &&
-          child.geometry.isBufferGeometry &&
-          !child.userData.isWireframe &&
-          !child.userData.hasWireframe
-        ) {
-          // This event can be triggered multiple times, even when the geometry is loaded.
-          // This bool avoid to create multiple wireframes for one geometry
-          child.userData.hasWireframe = true;
-
-          for (const [
-            // eslint-disable-next-line no-unused-vars
-            batchId,
-            c3DTFeature,
-          ] of object3D.layer.tilesC3DTileFeatures.get(object3D.tileId)) {
-            if (
-              (variantIdentifier.includes("GMLID") &&
-                c3DTFeature.getInfo().batchTable.gml_id == gml_id) ||
-              (variantIdentifier.includes("TileID") &&
-                c3DTFeature.tileId == variant_tileId &&
-                c3DTFeature.batchId == variant_batchId)
-            ) {
-              let positionByAttribute = new THREE.BufferAttribute(
-                child.geometry.attributes.position.array.slice(
-                  c3DTFeature.groups[0].start * 3,
-                  (c3DTFeature.groups[0].start + c3DTFeature.groups[0].count) *
-                    3 +
-                    1
-                ),
-                3
-              );
-              const mesh = new THREE.BufferGeometry();
-              mesh.setAttribute("position", positionByAttribute);
-
-              // THREE.EdgesGeometry needs triangle indices to be created.
-              // Create a new array for the indices
-              const indices = [];
-
-              // Iterate over every group of three vertices in the unindexed mesh and add the corresponding indices to the indices array
-              for (let j = 0; j < mesh.attributes.position.count; j += 3) {
-                indices.push(j, j + 1, j + 2);
-              }
-              mesh.setIndex(indices);
-
-              // Create the wireframe geometry
-              const edges = new THREE.EdgesGeometry(mesh, threshOldAngle);
-
-              const mat = new THREE.LineBasicMaterial({ color: 0x000000 });
-              const wireframe = new THREE.LineSegments(edges, mat);
-              wireframe.userData.isWireframe = true;
-              child.add(wireframe);
-            }
-          }
-        }
-      });
-    }
-  }
-
   isFeatureAChild(feature, el) {
     if (feature.GUID == el.GUID) return true;
     if (feature.children)
@@ -453,6 +470,14 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
       );
 
       itowns.View.prototype.addLayer.call(this.itownsView, itownsLayer);
+      if (!content.id.includes("bth")) {
+        itownsLayer.addEventListener(
+          itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+          ({ tileContent }) => {
+            appendWireframe(tileContent, content.variantIdentifier);
+          }
+        );
+      }
       if (content.id.includes("bth")) {
         itownsLayer.hierarchy = [];
         itownsLayer.addEventListener(
@@ -518,23 +543,22 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
               return 1;
             }
             if (content.variantIdentifier.includes("external")) {
-              if (
-                feature.getInfo().batchTable.properties &&
-                feature.getInfo().batchTable.properties[0]
-              ) {
-                feature.getInfo().batchTable.properties[0].map((value) => {
-                  if (Array.isArray(value)) {
-                    if (value[0] == "IsExternal" && value[1] == true) {
-                      feature.toHide = false;
+              if (feature.getInfo().batchTable.properties) {
+                feature.getInfo().batchTable.properties.forEach((el) => {
+                  el.map((value) => {
+                    if (Array.isArray(value)) {
+                      if (value[0] == "IsExternal" && value[1] == true) {
+                        feature.toHide = false;
+                      }
                     }
-                  }
+                  });
                 });
               }
             }
             if (!feature.toHide) return 1;
             if (content.variantIdentifier == "file") {
               if (feature.getInfo().batchTable.classe) {
-                if (ifcOpacity[feature.getInfo().batchTable.classe])
+                if (feature.getInfo().batchTable.classe in ifcOpacity)
                   return ifcOpacity[feature.getInfo().batchTable.classe];
               }
               return 1;
@@ -602,11 +626,11 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
     let showButton = document.getElementById(content.id + "_show_button");
     if (showButton) {
       if (this.itownsView.getLayerById(content.id) != undefined) {
-        showButton.classList.remove("w3-grey");
-        showButton.children[0].src = "../assets/icons/eye.svg";
-      } else {
         showButton.children[0].src = "../assets/icons/eye-slash.svg";
         showButton.classList.add("w3-grey");
+      } else {
+        showButton.children[0].src = "../assets/icons/eye.svg";
+        showButton.classList.remove("w3-grey");
       }
     }
   }
@@ -614,11 +638,11 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
   createShowButton(c, isPc = false) {
     let visualisator = document.createElement("button");
     visualisator.className =
-      "w3-btn w3-medium w3-bar-item w3-round w3-border w3-right w3-grey";
+      "w3-btn w3-medium w3-bar-item w3-round w3-border w3-right";
     visualisator.id = `${c.id}_show_button`;
     var logo = document.createElement("img");
     logo.width = "20";
-    logo.src = "../assets/icons/eye-slash.svg";
+    logo.src = "../assets/icons/eye.svg";
     visualisator.appendChild(logo);
     visualisator.onclick = () => {
       if (this.itownsView.getLayerById(c.id) == undefined) {

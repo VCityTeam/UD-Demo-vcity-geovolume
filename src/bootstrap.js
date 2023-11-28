@@ -38,14 +38,21 @@ loadMultipleJSON([
     parseInt(configs["extent_lyon"].south),
     parseInt(configs["extent_lyon"].north)
   );
-  
+
   // create a itowns planar view
   const viewDomElement = document.createElement("div");
   viewDomElement.classList.add("full_screen");
   document.body.appendChild(viewDomElement);
-  const view = new itowns.PlanarView(viewDomElement, extent);
+  const view = new itowns.PlanarView(viewDomElement, extent, {
+    maxSubdivisionLevel: 9,
+  });
   // init scene 3D
-  initScene(view.camera.camera3D, view.mainLoop.gfxEngine.renderer, view.scene);
+  initScene(
+    view.camera.camera3D,
+    view.mainLoop.gfxEngine.renderer,
+    view.scene,
+    configs["scene"]
+  );
 
   view.addLayer(
     new itowns.ColorLayer(configs["base_maps"][0]["layer_name"], {
@@ -93,17 +100,15 @@ loadMultipleJSON([
     view
   );
 
-  // const sparqlWidget = new SparqlQueryWindow(
-  //   new udvizBrowser.Widget.Server.SparqlEndpointResponseProvider(
-  //     configs["sparql_server"]
-  //   ),
-  //   frame3DPlanar,
-  //   configs["sparql_widget"],
-  //   geoVolumeModule.view
-  // );
+  const sparqlWidget = new SparqlQueryWindow(
+    new widgetSPARQL.SparqlEndpointResponseProvider(configs["sparql_server"]),
+    configs["sparql_widget"],
+    view,
+    geoVolumeModule.window
+  );
 
-  // const scaleWidget = new ScaleWidget(frame3DPlanar);
-  // const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view,frame3DPlanar);
+  const scaleWidget = new ScaleWidget(view);
+  const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view, view);
 
   // //// LAYER CHOICE MODULE
   // const layerChoice = new udvizBrowser.Widget.LayerChoice(

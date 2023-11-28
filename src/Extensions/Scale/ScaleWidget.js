@@ -3,18 +3,17 @@ import * as itowns from "itowns";
 import { findChildByID } from "../GeoVolume/Utils/htmlUtils"; 
 
 export class ScaleWidget {
-  constructor(frame3DPlanar) {
+  constructor(itownsView) {
     /** @type {HTMLElement} */
     this.rootHtml = document.createElement("div");
     this.rootHtml.innerHTML = this.innerContentHtml;
     this.rootHtml.id = "scale";
 
-    this.rootHtml.style.width = `${200}px`;
+    this.rootHtml.style.width = `${260}px`;
 
-    this.itownsView = frame3DPlanar.itownsView;
-    this.frame3DPlanar = frame3DPlanar;
+    this.itownsView = itownsView;
 
-    frame3DPlanar.rootHtml.appendChild(this.rootHtml);
+    this.itownsView.domElement.appendChild(this.rootHtml);
 
     this.itownsView.addEventListener(itowns.VIEW_EVENTS.INITIALIZED, () => {
       this.update();

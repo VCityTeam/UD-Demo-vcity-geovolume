@@ -2,20 +2,16 @@ import * as itowns from "itowns";
 import { findChildByID } from "../GeoVolume/Utils/htmlUtils"; 
 import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
 export class MyScaleWidget  {
-  constructor(geoVolumeWindow, frame3DPlanar) {
+  constructor(geoVolumeWindow, itownsView) {
     /** @type {HTMLElement} */
     this.rootHtml = document.createElement("div");
     this.rootHtml.innerHTML = this.innerContentHtml;
     this.rootHtml.id = "my_scale";
 
-    this.itownsView = frame3DPlanar.itownsView;
-    this.frame3DPlanar = frame3DPlanar;
+    this.itownsView = itownsView;
 
-    frame3DPlanar.rootHtml.appendChild(this.rootHtml);
+    this.itownsView.domElement.appendChild(this.rootHtml);
 
-    // this.itownsView.addEventListener(itowns.VIEW_EVENTS.LAYERS_INITIALIZED, () => {
-    //   this.update();
-    // });
     this.itownsView.addEventListener(itowns.PLANAR_CONTROL_EVENT.MOVED, () => {
       this.update();
     });

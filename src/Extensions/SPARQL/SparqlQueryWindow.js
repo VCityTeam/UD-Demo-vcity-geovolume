@@ -1,9 +1,6 @@
-import { loadTextFile, focusCameraOn, tokenizeURI } from '@ud-viz/utils_browser';
-import { findChildByID } from "../GeoVolume/Utils/htmlUtils";
-import { JsonRenderer,Table,Graph,SparqlEndpointResponseProvider } from "@ud-viz/widget_sparql";
-import * as itowns from "itowns";
-import * as THREE from "three";
-import "./SparqlQueryWindow.css";
+import { JsonRenderer, Table } from "@ud-viz/widget_sparql";
+import { D3GraphCanvas } from "./D3GraphCanvas";
+import { loadTextFile } from "@ud-viz/utils_browser";
 import { GeoVolumeWindow } from "../GeoVolume/GeoVolume/View/GeoVolumeWindow";
 
 /**
@@ -15,7 +12,6 @@ export class SparqlQueryWindow {
    * Creates a SPARQL query window.
    *
    * @param {SparqlEndpointResponseProvider} sparqlProvider The SPARQL Endpoint Response Provider
-   * @param {itowns.PlanarView} itownsView view
    * @param {object} configSparqlWidget The sparqlModule view configuration.
    * @param {object} configSparqlWidget.queries Query configurations
    * @param {object} configSparqlWidget.queries.title The query title
@@ -25,29 +21,54 @@ export class SparqlQueryWindow {
    *                                              pairs. The keys of these pairs should correspond
    *                                              with the cases in the updateDataView() function.
    */
-  constructor(
-    sparqlProvider,
-    frame3DPlanar,
-    configSparqlWidget,
-    geoVolumeWidget
-  ) {
+  constructor(sparqlProvider, configSparqlWidget, itownsView, geoVolumeWidget) {
+    /** @type {HTMLElement} */
+    this.domElement = null;
 
     /** @type {HTMLElement} */
-    this.domElement = document.createElement("div");
-    this.domElement.setAttribute("id", "_window_sparqlQueryWindow");
-    this.domElement.innerHTML = this.innerContentHtml;
+    this.dataView = null;
 
+    /** @type {HTMLElement} */
+    this.form = null;
+
+    /** @type {HTMLElement} */
+    this.querySelect = null;
+
+    /** @type {HTMLElement} */
+    this.resultSelect = null;
+
+    /** @type {HTMLElement} */
+    this.resetButton = null;
+
+    /** @type {HTMLElement} */
+    this.queryTextArea = null;
+
+    /** @type {HTMLElement} */
+    this.toggleQueryTextAreaButton = null;
+
+    this.buttonHide = null;
+
+    this.initHtml();
+
+    this.domElement.classList.add("widget_sparql");
+    this.domElement.style.visibility = "hidden";
+
+    this.buttonHide.onclick = () => {
+      this.domElement.style.visibility = "hidden";
+    };
+    const uiDomElement = document.createElement("div");
+    uiDomElement.classList.add("full_screen");
+    document.body.appendChild(uiDomElement);
+    uiDomElement.appendChild(this.domElement);
+
+
+    this.configSparqlWidget = configSparqlWidget;
     /**
      * The SPARQL Endpoint Response Provider
      *
      * @type {SparqlEndpointResponseProvider}
      */
     this.sparqlProvider = sparqlProvider;
-
-    /** @type {itowns.PlanarView} */
-    this.itownsView = frame3DPlanar.itownsView;
-
-    this.frame3DPlanar = frame3DPlanar;
 
     /**
      *A reference to the JsonRenderer class
@@ -59,9 +80,9 @@ export class SparqlQueryWindow {
     /**
      * Contains the D3 graph view to display RDF data.
      *
-     * @type {Graph}
+     * @type {D3GraphCanvas}
      */
-    this.graph = new Graph(this, configSparqlWidget);
+    this.d3Graph = new D3GraphCanvas(configSparqlWidget);
 
     /**
      * Contains the D3 table to display RDF data.
@@ -76,11 +97,6 @@ export class SparqlQueryWindow {
      * @type {object}
      */
     this.queries = configSparqlWidget["queries"];
-
-    this.registerEvent(Graph.EVENT_NODE_CLICKED);
-    this.registerEvent(Graph.EVENT_NODE_MOUSEOVER);
-    this.registerEvent(Graph.EVENT_NODE_MOUSEOUT);
-    this.registerEvent(Table.EVENT_CELL_CLICKED);
 
     /**
      * Sets the SparqlEndpointResponseProvider
@@ -99,110 +115,10 @@ export class SparqlQueryWindow {
       );
     });
 
-    //index of the viewed query
-    let index = -1;
-
-
-    this.sparqlProvider.addEventListener(
-      SparqlEndpointResponseProvider.EVENT_ENDPOINT_RESPONSE_UPDATED,
-      (response) => {
-        this.response = response;
-        this.updateDataView(
-          findChildByID(this.domElement, this.resultSelectId).value
-        );
-      }
-    );
-
-    this.resultSelect.onchange = () => {
-      if (this.response)
-        this.updateDataView(
-          findChildByID(this.domElement, this.resultSelectId).value
-        );
-    };
-
-    const fetchC3DTileFeatureWithNodeText = (node_text) => {
-      let result = null;
-      this.itownsView
-        .getLayers()
-        .filter((el) => el.isC3DTilesLayer)
-        .forEach((c3DTilesLayer) => {
-          for (const [
-            // eslint-disable-next-line no-unused-vars
-            tileId,
-            tileC3DTileFeatures,
-          ] of c3DTilesLayer.tilesC3DTileFeatures) {
-            // eslint-disable-next-line no-unused-vars
-            for (const [batchId, c3DTileFeature] of tileC3DTileFeatures) {
-              if (
-                c3DTileFeature.getInfo().batchTable["gml_id"] ==
-                tokenizeURI(node_text).id
-              ) {
-                result = {
-                  feature: c3DTileFeature,
-                  layer: c3DTilesLayer,
-                };
-                break;
-              }
-            }
-          }
-        });
-
-      return result;
-    };
-
-    this.addEventListener(Graph.EVENT_NODE_CLICKED, (node_text) => {
-      const clickedResult = fetchC3DTileFeatureWithNodeText(node_text);
-
-      if (!clickedResult) return;
-
-      focusCameraOn(
-        this.itownsView,
-        this.itownsView.controls,
-        clickedResult.layer
-          .computeWorldBox3(clickedResult.feature)
-          .getCenter(new THREE.Vector3()),
-        {
-          verticalDistance: 200,
-          horizontalDistance: 200,
-        }
-      );
-    });
-
-    this.addEventListener(Table.EVENT_CELL_CLICKED, (cell_text) => {
-      const clickedResult = fetchC3DTileFeatureWithNodeText(cell_text);
-
-      if (!clickedResult) return;
-
-      focusCameraOn(
-        this.itownsView,
-        this.itownsView.controls,
-        clickedResult.layer
-          .computeWorldBox3(clickedResult.feature)
-          .getCenter(new THREE.Vector3()),
-        {
-          verticalDistance: 200,
-          horizontalDistance: 200,
-        }
-      );
-    });
-
-    const parent = document.createElement('div');
-    parent.style.width = 'fit-content';
-    parent.style.position = 'absolute';
-    parent.style.right = '0px';
-    parent.style.display = 'none';
-    parent.style.zIndex = 2;
-    parent.appendChild(this.domElement);
-  
-    frame3DPlanar.rootHtml.appendChild(parent);
-
-    this.closeButton.onclick = () => {
-      parent.style.display = 'none';
-    };
-
     geoVolumeWidget.addEventListener(
-      GeoVolumeWindow.GEOVOLUME_SHOWN,
-      (geoVolume) => {
+      GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
+      (event) => {
+        let geoVolume = event.message;
         if (geoVolume.content.length > 0) {
           for (let c of geoVolume.content) {
             if (c.type.includes("sparql")) {
@@ -217,17 +133,17 @@ export class SparqlQueryWindow {
               graphButton.onclick = () => {
                 Promise.all(promises).then(() => {
                   let index_temp = -1;
-                  if(c.variantIdentifier.includes("vt")) index_temp = 0;
-                  if(c.variantIdentifier.includes("GMLID")) index_temp = 1;
-                  if(c.variantIdentifier.includes("GUID")) index_temp = 2;
-                  if(index_temp != this.index){
-                    this.index = index_temp;
-                    this.updateResultDropdown(this.index);
-                    this.sparqlProvider.querySparqlEndpointService(
-                      this.queries[this.index].text
-                    );
+                  if (c.variantIdentifier.includes("GMLID")) index_temp = 1;
+                  if (c.variantIdentifier.includes("GUID")) index_temp = 2;
+                  if (index_temp == 1 || index_temp == 2) {
+                    const query = this.queries[index_temp].text.replace("$ID",c.variantIdentifier.split("=").slice(-1));
+                    this.d3Graph = new D3GraphCanvas(this.configSparqlWidget);
+                    this.sparqlProvider
+                      .querySparqlEndpointService(query)
+                      .then((response) =>
+                        this.updateDataView(response, "graph")
+                      );
                   }
-                  parent.style.display = "block";
                 });
               };
               li.appendChild(graphButton);
@@ -236,10 +152,7 @@ export class SparqlQueryWindow {
         }
       }
     );
-
-
   }
-
 
   /**
    * Update the DataView.
@@ -247,28 +160,29 @@ export class SparqlQueryWindow {
    * @param {object} response A JSON object returned by a SparqlEndpointResponseProvider.EVENT_ENDPOINT_RESPONSE_UPDATED event
    * @param {string} view_type The selected semantic data view type.
    */
-  updateDataView(view_type) {
+  updateDataView(response, view_type) {
+    console.log(response);
+
     this.clearDataView();
+    this.domElement.style.visibility = "visible";
     switch (view_type) {
       case "graph":
-        this.graph.update(this.response);
-        this.dataView.append(this.graph.canvas);
+        this.d3Graph.update(response);
+        this.dataView.append(this.d3Graph.canvas);
         break;
       case "json":
         this.jsonRenderer.renderjson.set_icons("▶", "▼");
         this.jsonRenderer.renderjson.set_max_string_length(40);
-        this.dataView.append(this.jsonRenderer.renderjson(this.response));
+        this.dataView.append(this.jsonRenderer.renderjson(response));
         break;
       case "table":
-        this.table.dataAsTable(
-          this.response.results.bindings,
-          this.response.head.vars
-        );
+        this.dataView.append(this.table.domElement);
+        this.table.dataAsTable(response.results.bindings, response.head.vars);
         this.table.filterInput.addEventListener("change", (e) =>
           Table.update(this.table, e)
         );
         this.dataView.style["height"] = "500px";
-        this.dataView.style["overflow"] = "scroll";
+        this.dataView.style["width"] = "800px";
         break;
       default:
         console.error("This result format is not supported: " + view_type);
@@ -279,7 +193,7 @@ export class SparqlQueryWindow {
    * Clear the DataView of content.
    */
   clearDataView() {
-    this.dataView.innerHTML = "";
+    this.dataView.innerText = "";
     this.dataView.style["height"] = "100%";
     this.dataView.style["overflow"] = "auto";
   }
@@ -300,43 +214,24 @@ export class SparqlQueryWindow {
     formats.forEach(([k, v]) => {
       const option = document.createElement("option");
       option.value = k;
-      option.innerHTML = v;
+      option.innerText = v;
       this.resultSelect.appendChild(option);
     });
   }
 
-  // SPARQL Window getters //
-  get innerContentHtml() {
-    return /* html*/ `
-      <div class="box-section">
-          <label>Results Format: </label>
-          <select id="${this.resultSelectId}"></select>
-          <button id="${this.closeButtonId}" class="w3-btn w3-medium w3-round w3-border">Close</button>
-      </div>
-      <div id="${this.dataViewId}" class="box-selection"/>`;
-  }
-
-  get dataViewId() {
-    return `sparql_window_data_view`;
-  }
-
-  get closeButtonId() {
-    return `sparql_window_close_button`;
-  }
-
-  get closeButton() {
-    return findChildByID(this.domElement, this.closeButtonId);
-  }
-
-  get dataView() {
-    return findChildByID(this.domElement, this.dataViewId);
-  }
-
-  get resultSelectId() {
-    return `sparql_window_result_select`;
-  }
-
-  get resultSelect() {
-    return findChildByID(this.domElement, this.resultSelectId);
+  /**
+   * Initialize the html of the view
+   */
+  initHtml() {
+    this.domElement = document.createElement("div");
+    const interfaceElement = document.createElement("div");
+    interfaceElement.className = "box-section";
+    this.buttonHide = document.createElement("button");
+    this.buttonHide.innerText = "Hide";
+    interfaceElement.appendChild(this.buttonHide);
+    this.domElement.appendChild(interfaceElement);
+    this.dataView = document.createElement("div");
+    this.dataView.className = "box-selection";
+    interfaceElement.appendChild(this.dataView);
   }
 }

@@ -1652,6 +1652,29 @@ html {
     font-weight: 700;
   }
   
+  .widget_sparql {
+    width: 500px;
+    z-index: 5;
+    position: absolute;
+    top:0;
+    right: 0;
+    border: 2px solid #000000cc;
+    border-radius: 0 0 0 15px;
+    border-right: none;
+    border-top: none;
+    background-color: rgba(95, 130, 182, 0.863);
+  }
+  
+  datalist {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    text-align: left;
+    justify-content: space-between;
+    top:50%;
+    position: absolute;
+    transform: translate(0, -50%);
+  }
   #scale_text {
     position: relative;
     top: 50%;
@@ -1671,6 +1694,19 @@ html {
     border: 2px solid #000000;
   }
   
+  .myrange {
+    appearance: slider-vertical;
+    height: 90%;
+    position :absolute;
+    top:50%;
+    transform: scaleX(-1) translate(-27%,-50%);
+    color: rgb(0, 0, 0);
+  }
+
+  
+  .ticks {
+    font-weight: 700;
+  }
   #LOD-range {
     position: absolute;
     bottom:10%;
@@ -1724,16 +1760,18 @@ html {
     top : 5%;
   }
   
-  .widget_sparql {
-    width: fit-content;
-    z-index: 5;
-    position: absolute;
-    top:0;
-    right: 0;
-    border: 2px solid #000000cc;
-    border-radius: 0 0 0 15px;
-    border-right: none;
-    border-top: none;
-    background-color: rgba(95, 130, 182, 0.863);
-  }
+
   
+  #scale {
+    z-index: 2;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    text-align: center;
+    border: 2px solid #000000cc;
+    border-radius: 15px 0 0 0;
+    border-bottom: none;
+    border-right: none;
+    background-color : rgba(95, 130, 182, 0.863);
+    font-weight: 700;
+  }

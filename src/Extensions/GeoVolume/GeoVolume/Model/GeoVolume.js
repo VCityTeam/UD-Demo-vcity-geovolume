@@ -64,6 +64,8 @@ export class GeoVolume {
     var mat = new THREE.LineBasicMaterial({ color: 0x000000 });
     var wireframe = new THREE.LineSegments(geo, mat);
     cube.add(wireframe);
+    wireframe.updateWorldMatrix(false, false);
+
     cube.geoVolume = this;
     this.bboxGeom = cube;
     this.bboxGeom.visible = false;

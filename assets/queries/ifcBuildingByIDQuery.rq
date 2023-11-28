@@ -1,7 +1,6 @@
 PREFIX express: <https://w3id.org/express#>
 PREFIX ifc:     <http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL#>
 
-# return an IFC Slab matching an ID
 
 SELECT ?subject ?subjectType ?predicate ?object ?objectType
 WHERE {
@@ -9,7 +8,7 @@ WHERE {
     a ?subjectType ;
     ?predicate ?object ;
     ifc:globalId_IfcRoot ?id .
-  ?id express:hasString "0AhY_q3Qr4ZgkcqnSHCY$3" .
+  ?id express:hasString "$ID" .
   OPTIONAL { ?object a ?objectType }
 }
 
