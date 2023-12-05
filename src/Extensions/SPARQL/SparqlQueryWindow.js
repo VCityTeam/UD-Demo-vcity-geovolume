@@ -28,24 +28,6 @@ export class SparqlQueryWindow {
     /** @type {HTMLElement} */
     this.dataView = null;
 
-    /** @type {HTMLElement} */
-    this.form = null;
-
-    /** @type {HTMLElement} */
-    this.querySelect = null;
-
-    /** @type {HTMLElement} */
-    this.resultSelect = null;
-
-    /** @type {HTMLElement} */
-    this.resetButton = null;
-
-    /** @type {HTMLElement} */
-    this.queryTextArea = null;
-
-    /** @type {HTMLElement} */
-    this.toggleQueryTextAreaButton = null;
-
     this.buttonHide = null;
 
     this.initHtml();
@@ -60,7 +42,6 @@ export class SparqlQueryWindow {
     uiDomElement.classList.add("full_screen");
     document.body.appendChild(uiDomElement);
     uiDomElement.appendChild(this.domElement);
-
 
     this.configSparqlWidget = configSparqlWidget;
     /**
@@ -77,12 +58,13 @@ export class SparqlQueryWindow {
      */
     this.jsonRenderer = new JsonRenderer();
 
+    this.itownsView = itownsView;
     /**
      * Contains the D3 graph view to display RDF data.
      *
      * @type {D3GraphCanvas}
      */
-    this.d3Graph = new D3GraphCanvas(configSparqlWidget);
+    this.d3Graph = new D3GraphCanvas(configSparqlWidget,this.itownsView);
 
     /**
      * Contains the D3 table to display RDF data.
@@ -136,12 +118,15 @@ export class SparqlQueryWindow {
                   if (c.variantIdentifier.includes("GMLID")) index_temp = 1;
                   if (c.variantIdentifier.includes("GUID")) index_temp = 2;
                   if (index_temp == 1 || index_temp == 2) {
-                    const query = this.queries[index_temp].text.replace("$ID",c.variantIdentifier.split("=").slice(-1));
-                    this.d3Graph = new D3GraphCanvas(this.configSparqlWidget);
+                    const query = this.queries[index_temp].text.replaceAll(
+                      "$ID",
+                      c.variantIdentifier.split("=").slice(-1)[0]
+                    );
+                    this.d3Graph = new D3GraphCanvas(this.configSparqlWidget,this.itownsView);
                     this.sparqlProvider
                       .querySparqlEndpointService(query)
                       .then((response) =>
-                        this.updateDataView(response, "graph")
+                        this.updateDataView(response)
                       );
                   }
                 });
@@ -160,33 +145,13 @@ export class SparqlQueryWindow {
    * @param {object} response A JSON object returned by a SparqlEndpointResponseProvider.EVENT_ENDPOINT_RESPONSE_UPDATED event
    * @param {string} view_type The selected semantic data view type.
    */
-  updateDataView(response, view_type) {
+  updateDataView(response) {
     console.log(response);
 
     this.clearDataView();
     this.domElement.style.visibility = "visible";
-    switch (view_type) {
-      case "graph":
-        this.d3Graph.update(response);
-        this.dataView.append(this.d3Graph.canvas);
-        break;
-      case "json":
-        this.jsonRenderer.renderjson.set_icons("▶", "▼");
-        this.jsonRenderer.renderjson.set_max_string_length(40);
-        this.dataView.append(this.jsonRenderer.renderjson(response));
-        break;
-      case "table":
-        this.dataView.append(this.table.domElement);
-        this.table.dataAsTable(response.results.bindings, response.head.vars);
-        this.table.filterInput.addEventListener("change", (e) =>
-          Table.update(this.table, e)
-        );
-        this.dataView.style["height"] = "500px";
-        this.dataView.style["width"] = "800px";
-        break;
-      default:
-        console.error("This result format is not supported: " + view_type);
-    }
+    this.d3Graph.update(response);
+    this.dataView.append(this.d3Graph.canvas);
   }
 
   /**
@@ -196,27 +161,6 @@ export class SparqlQueryWindow {
     this.dataView.innerText = "";
     this.dataView.style["height"] = "100%";
     this.dataView.style["overflow"] = "auto";
-  }
-
-  /**
-   * Remove all the children of this.resultSelect, then adds new children options based
-   * on the formats declared in each query configuration from from this.queries
-   *
-   * @param {number} index - the index of the query in the queries array
-   */
-  updateResultDropdown(index) {
-    // this is a weird work around to do this.resultSelect.children.forEach(...)
-    while (this.resultSelect.children.length > 0) {
-      this.resultSelect.removeChild(this.resultSelect.children.item(0));
-    }
-
-    const formats = Object.entries(this.queries[Number(index)].formats);
-    formats.forEach(([k, v]) => {
-      const option = document.createElement("option");
-      option.value = k;
-      option.innerText = v;
-      this.resultSelect.appendChild(option);
-    });
   }
 
   /**

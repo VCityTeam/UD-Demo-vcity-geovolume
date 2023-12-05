@@ -270,12 +270,26 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
         this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer)
       );
       if (intersectsFeatures.length) {
+        let tmp = [];
+        for (const el of intersectsFeatures) {
+          if (el.object.isMesh) {
+            for (let mat of el.object.material)
+              if (mat.opacity != 0) {
+                tmp.push(el);
+                continue;
+              }
+          }
+        }
+
         // get featureClicked
         const featureClicked =
-          intersectsFeatures[0].layer.getC3DTileFeatureFromIntersectsArray(
-            intersectsFeatures
-          );
-        console.log(featureClicked.getInfo());
+          intersectsFeatures[0].layer.getC3DTileFeatureFromIntersectsArray(tmp);
+        intersectsFeatures[0].layer.selectedObjectId =
+          featureClicked.getInfo().batchTable.id;
+        intersectsFeatures[0].layer.updateStyle();
+        console.log(featureClicked);
+
+        console.log(featureClicked.getInfo().batchTable);
       }
     }
   }
@@ -284,7 +298,7 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
     this.geoVolumeSource.getgeoVolumes().then(() => {
       this.dispatchEvent({
         type: GeoVolumeWindow.SELECTED_GEOVOLUME_UPDATED,
-        message: this.geoVolumeSource.collection[0],
+        message: this.geoVolumeSource.collection[0].children[1].children[0],
       });
       this.itownsView.notifyChange();
     });
@@ -518,56 +532,90 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
         );
       }
 
+      itownsLayer.addEventListener(
+        itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+        ({ tileContent }) => {
+          if (tileContent.layer.tilesC3DTileFeatures.get(tileContent.tileId)) {
+            tileContent.layer.tilesC3DTileFeatures
+              .get(tileContent.tileId)
+              .forEach((feature) => {
+                feature.userData.layer = tileContent.layer;
+                feature.userData.color = "grey";
+                feature.userData.opacity = 0;
+                if (feature.getInfo().batchTable.classe) {
+                  if (ifcColor[feature.getInfo().batchTable.classe])
+                    feature.userData.color =
+                      ifcColor[feature.getInfo().batchTable.classe];
+                }
+                if (
+                  content.variantIdentifier.includes("GMLID") &&
+                  feature.getInfo().batchTable.gml_id == gml_id
+                ) {
+                  feature.userData.opacity = 1;
+                }
+                if (
+                  content.variantIdentifier.includes("TileID") &&
+                  feature.tileId == tileId &&
+                  feature.batchId == batchId
+                ) {
+                  feature.userData.opacity = 1;
+                }
+                if (content.variantIdentifier.includes("external")) {
+                  if (feature.getInfo().batchTable.properties) {
+                    feature.getInfo().batchTable.properties.forEach((el) => {
+                      el.map((value) => {
+                        if (Array.isArray(value)) {
+                          if (value[0] == "IsExternal" && value[1] == true) {
+                            feature.userData.opacity = 1;
+                          }
+                        }
+                      });
+                    });
+                  }
+                }
+                if (content.variantIdentifier == "file") {
+                  feature.userData.opacity = 1;
+                  if (feature.getInfo().batchTable.classe)
+                    if (feature.getInfo().batchTable.classe in ifcOpacity)
+                      feature.userData.opacity =
+                        ifcOpacity[feature.getInfo().batchTable.classe];
+                }
+              });
+            tileContent.layer.updateStyle([tileContent.tileId]);
+            this.itownsView.notifyChange();
+          }
+        }
+      );
+
       const myStyle = new itowns.Style({
         fill: {
           color: function (feature) {
-            if (feature.getInfo().batchTable.classe) {
-              if (ifcColor[feature.getInfo().batchTable.classe])
-                return ifcColor[feature.getInfo().batchTable.classe];
+            let color = "grey";
+            if (feature.userData.color) {
+              color = feature.userData.color;
             }
-            return "grey";
+            if (feature.userData.layer !== undefined) {
+              if (feature.userData.layer.selectedObjectId)
+                for (const [key, value] of Object.entries(
+                  feature.getInfo().batchTable
+                )) {
+                  if (value == feature.userData.layer.selectedObjectId) {
+                    color = "blue";
+                    continue;
+                  }
+                }
+              // color = "blue";
+            }
+            return color;
           },
           opacity: function (feature) {
-            feature.toHide = true;
-            if (
-              content.variantIdentifier.includes("GMLID") &&
-              feature.getInfo().batchTable.gml_id == gml_id
-            ) {
-              return 1;
+            if (feature.userData.opacity !== undefined) {
+              return feature.userData.opacity;
             }
-            if (
-              content.variantIdentifier.includes("TileID") &&
-              feature.tileId == tileId &&
-              feature.batchId == batchId
-            ) {
-              return 1;
-            }
-            if (content.variantIdentifier.includes("external")) {
-              if (feature.getInfo().batchTable.properties) {
-                feature.getInfo().batchTable.properties.forEach((el) => {
-                  el.map((value) => {
-                    if (Array.isArray(value)) {
-                      if (value[0] == "IsExternal" && value[1] == true) {
-                        feature.toHide = false;
-                      }
-                    }
-                  });
-                });
-              }
-            }
-            if (!feature.toHide) return 1;
-            if (content.variantIdentifier == "file") {
-              if (feature.getInfo().batchTable.classe) {
-                if (feature.getInfo().batchTable.classe in ifcOpacity)
-                  return ifcOpacity[feature.getInfo().batchTable.classe];
-              }
-              return 1;
-            }
-            return 0;
+            return 1;
           },
         },
       });
-
       this.itownsView.getLayerById(content.id).style = myStyle;
     }
   }

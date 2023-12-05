@@ -17,7 +17,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
    * @param {object} configSparqlWidget.namespaceLabels Prefix declarations which will replace text labels in the Legend.
    *                                                    This doesn't (yet) affect the legend font size.
    */
-  constructor(configSparqlWidget) {
+  constructor(configSparqlWidget,itownsView) {
     super();
     if (
       !configSparqlWidget ||
@@ -28,6 +28,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
       console.log(configSparqlWidget);
       throw 'The given "configSparqlWidget" configuration is incorrect.';
     }
+    this.itownsView = itownsView;
     this.height = configSparqlWidget.height;
     this.width = configSparqlWidget.width;
     this.fontSize = configSparqlWidget.fontSize;
@@ -51,7 +52,6 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
   update(response) {
     this.clearCanvas();
     this.data.formatResponseData(response);
-
     const links = this.data.links.map((d) => Object.create(d));
     const nodes = this.data.nodes.map((d) => Object.create(d));
     this.data.typeList.forEach((el,i) => {
@@ -98,6 +98,13 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
       .attr("stroke", (d) => setColor(d.color_id, "#ddd", "#111"))
       .attr("fill", (d) => setColor(d.color_id, "black"))
       .on("click", (event, datum) => {
+        console.log(this.itownsView);        
+        
+        this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer).forEach((layer) => {
+          layer.selectedObjectId = this.data.nodes[datum.index].id.split("#").slice(-1);
+          layer.updateStyle();
+          this.itownsView.notifyChange();
+        });
         this.dispatchEvent({
           type: "click",
           message: "node click event",
