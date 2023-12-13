@@ -5,30 +5,19 @@
   "queries": [
     {
       "title": "Select Buildings from Version (2012)",
-      "formats": {
-        "graph": "Graph",
-        "table": "Table",
-        "json": "JSON"
-      },
-      "filepath": "./assets/queries/version.rq"
+      "filepath": "./assets/queries/allBuildings.rq"
     },
     {
       "title": "Select Building by ID",
-      "formats": {
-        "graph": "Graph",
-        "table": "Table",
-        "json": "JSON"
-      },
       "filepath": "./assets/queries/buildingByIDQuery.rq"
     },
     {
       "title": "Select Slabs from Building",
-      "formats": {
-        "graph": "Graph",
-        "table": "Table",
-        "json": "JSON"
-      },
       "filepath": "./assets/queries/ifcBuildingByIDQuery.rq"
+    },
+    {
+      "title": "Select hierarchy from Building",
+      "filepath": "./assets/queries/ifcHierarchy.rq"
     }
   ],
   "namespaceLabels": {

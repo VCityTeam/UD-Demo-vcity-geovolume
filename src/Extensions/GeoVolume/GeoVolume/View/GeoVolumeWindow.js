@@ -14,11 +14,11 @@ var ifcColor = {
 
 var ifcOpacity = {
   IfcWindow: 0.4,
-  IfcShadingDevice: 0,
+  IfcShadingDevice: 1,
   IfcSpace: 0.5,
-  IfcBuildingElementProxy: 0,
-  IfcOpeningElement: 0,
-  IfcPlate: 0,
+  IfcBuildingElementProxy: 1,
+  IfcOpeningElement: 1,
+  IfcPlate: 1,
 };
 
 function appendWireframe(object3D, variantIdentifier, threshOldAngle = 30) {
@@ -118,7 +118,10 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
         this.changeDisplayedGeovolume(event.message);
       }
     );
-    this.itownsView.domElement.appendChild(this.html());
+    const uiDomElement = document.createElement("div");
+    uiDomElement.classList.add("full_screen");  
+    document.body.appendChild(uiDomElement);
+    uiDomElement.appendChild(this.html());
 
     this.mouseClickListener = (event) => {
       this.onMouseClick(event);
@@ -133,12 +136,12 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
     //   this.updateLOD();
     // });
 
-    this.lodRangeMinElement.addEventListener("input", () => {
-      this.lodRangeMinOutputElement.innerText = this.lodRangeMinElement.value;
-    });
-    this.lodRangeMaxElement.addEventListener("input", () => {
-      this.lodRangeMaxOutputElement.innerText = this.lodRangeMaxElement.value;
-    });
+    // this.lodRangeMinElement.addEventListener("input", () => {
+    //   this.lodRangeMinOutputElement.innerText = this.lodRangeMinElement.value;
+    // });
+    // this.lodRangeMaxElement.addEventListener("input", () => {
+    //   this.lodRangeMaxOutputElement.innerText = this.lodRangeMaxElement.value;
+    // });
   }
 
   sort_content(method, contents) {
@@ -193,6 +196,7 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
       }
     }
   }
+
   focusGeovolume() {
     if (this.selectedGeoVolume) {
       let box3 = new THREE.Box3().setFromObject(
@@ -287,9 +291,6 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
         intersectsFeatures[0].layer.selectedObjectId =
           featureClicked.getInfo().batchTable.id;
         intersectsFeatures[0].layer.updateStyle();
-        console.log(featureClicked);
-
-        console.log(featureClicked.getInfo().batchTable);
       }
     }
   }
@@ -309,35 +310,37 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
     return /*html*/ `
       <div class ="box-section" id="${this.geoVolumeDivId}"> 
         <div id= "${this.geoVolumeListId}"></div>
-        <div id= "${this.geoVolumeLODId}" class="geovolume-el">
-          LOD
-          <div>
-          Scale : <output id="output_scale">2</output>
-          </div>
-          <div style="position:relative;">
-          <label for="LOD-range-max">Scale max : </label>
-          <output id="output_scale_max">21</output>
-          <input type="range" class="lod-range" id="LOD-range-max" min="0" max="26" step="1" value="21"/>
-          </div>
-          <div style="position:relative;">
-          <label for="LOD-range-min">Scale min : </label>
-          <output id="output_scale_min">14</output>
-          <input type="range" class="lod-range" id="LOD-range-min" min="0" max="26" step="1" value="14"/>
-          </div>
 
-          <div>
-            <label for="LOD-select">Sort by : </label>
-            <select id="LOD-select" class="my-select">
-              <option value="points">Number of points</option>
-              <option value="max">Max distance</option>
-              <option value="min">Min distance</option>
-              <option value="feature">Number of feature</option>
-            </select>
-          </div>
-        </div>
       </div>
     `;
   }
+
+//   <div id= "${this.geoVolumeLODId}" class="geovolume-el">
+//   LOD
+//   <div>
+//   Scale : <output id="output_scale">2</output>
+//   </div>
+//   <div style="position:relative;">
+//   <label for="LOD-range-max">Scale max : </label>
+//   <output id="output_scale_max">21</output>
+//   <input type="range" class="lod-range" id="LOD-range-max" min="0" max="26" step="1" value="21"/>
+//   </div>
+//   <div style="position:relative;">
+//   <label for="LOD-range-min">Scale min : </label>
+//   <output id="output_scale_min">14</output>
+//   <input type="range" class="lod-range" id="LOD-range-min" min="0" max="26" step="1" value="14"/>
+//   </div>
+
+//   <div>
+//     <label for="LOD-select">Sort by : </label>
+//     <select id="LOD-select" class="my-select">
+//       <option value="points">Number of points</option>
+//       <option value="max">Max distance</option>
+//       <option value="min">Min distance</option>
+//       <option value="feature">Number of feature</option>
+//     </select>
+//   </div>
+// </div>
 
   visualizePointCloudContent(content) {
     if (this.itownsView.getLayerById(content.id) == undefined) {
@@ -492,45 +495,45 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
           }
         );
       }
-      if (content.id.includes("bth")) {
-        itownsLayer.hierarchy = [];
-        itownsLayer.addEventListener(
-          itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
-          ({ tileContent }) => {
-            if (tileContent.batchTable) {
-              for (let i = 0; i < tileContent.batchTable.batchLength; i++) {
-                let elements =
-                  tileContent.batchTable.extensions[
-                    "3DTILES_batch_table_hierarchy"
-                  ].getInfoById(i);
-                let parent = null;
-                let elementsArray = [];
-                for (let el in elements) {
-                  elements[el].class = el;
-                  elements[el].tileId = [];
-                  elements[el].children = [];
-                  elementsArray.unshift(elements[el]);
-                }
-                for (let el in elementsArray) {
-                  el = elementsArray[el];
-                  if (!this.isFeatureInHierarchy(itownsLayer.hierarchy, el)) {
-                    if (parent) {
-                      parent.children.push(el);
-                    } else itownsLayer.hierarchy.push(el);
-                  }
-                  parent = this.getFeatureInHierarchy(
-                    itownsLayer.hierarchy,
-                    el
-                  );
-                  if (!parent.tileId.includes(tileContent.tileId))
-                    parent.tileId.push(tileContent.tileId);
-                }
-              }
-              this.update3DTilesHTMLHierarchy(tileContent.layer);
-            }
-          }
-        );
-      }
+      // if (content.id.includes("bth")) {
+      //   itownsLayer.hierarchy = [];
+      //   itownsLayer.addEventListener(
+      //     itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
+      //     ({ tileContent }) => {
+      //       if (tileContent.batchTable) {
+      //         for (let i = 0; i < tileContent.batchTable.batchLength; i++) {
+      //           let elements =
+      //             tileContent.batchTable.extensions[
+      //               "3DTILES_batch_table_hierarchy"
+      //             ].getInfoById(i);
+      //           let parent = null;
+      //           let elementsArray = [];
+      //           for (let el in elements) {
+      //             elements[el].class = el;
+      //             elements[el].tileId = [];
+      //             elements[el].children = [];
+      //             elementsArray.unshift(elements[el]);
+      //           }
+      //           for (let el in elementsArray) {
+      //             el = elementsArray[el];
+      //             if (!this.isFeatureInHierarchy(itownsLayer.hierarchy, el)) {
+      //               if (parent) {
+      //                 parent.children.push(el);
+      //               } else itownsLayer.hierarchy.push(el);
+      //             }
+      //             parent = this.getFeatureInHierarchy(
+      //               itownsLayer.hierarchy,
+      //               el
+      //             );
+      //             if (!parent.tileId.includes(tileContent.tileId))
+      //               parent.tileId.push(tileContent.tileId);
+      //           }
+      //         }
+      //         // this.update3DTilesHTMLHierarchy(tileContent.layer);
+      //       }
+      //     }
+      //   );
+      // }
 
       itownsLayer.addEventListener(
         itowns.C3DTILES_LAYER_EVENTS.ON_TILE_CONTENT_LOADED,
@@ -542,6 +545,8 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
                 feature.userData.layer = tileContent.layer;
                 feature.userData.color = "grey";
                 feature.userData.opacity = 0;
+                feature.userData.view = this.itownsView;
+
                 if (feature.getInfo().batchTable.classe) {
                   if (ifcColor[feature.getInfo().batchTable.classe])
                     feature.userData.color =
@@ -600,11 +605,35 @@ export class GeoVolumeWindow extends THREE.EventDispatcher {
                   feature.getInfo().batchTable
                 )) {
                   if (value == feature.userData.layer.selectedObjectId) {
-                    color = "blue";
-                    continue;
+                    feature.userData.layer.root.traverse((child) => {
+                      if(child.tileId == feature.tileId){
+                        let position = new THREE.Vector3(
+                          child.position.x,
+                          child.position.y,
+                          child.position.z + 800
+                        );
+                        let angle = new THREE.Quaternion().setFromAxisAngle(
+                          new THREE.Vector3(1, 0, 0),
+                          0
+                        );
+                        // feature.userData.view.controls.initiateTravel(position, "auto", angle, true);
+                        return null;
+                      }
+                    });
+                    return "blue";
                   }
                 }
-              // color = "blue";
+                if(feature.getInfo().extensions){
+                  for(const [, hierarchy] of Object.entries(
+                    feature.getInfo().extensions
+                  ))
+                  {
+                    for(const [,value] of Object.entries(hierarchy)){
+                      if (value.GUID == feature.userData.layer.selectedObjectId)
+                        return "blue";
+                    }
+                  }
+                }
             }
             return color;
           },

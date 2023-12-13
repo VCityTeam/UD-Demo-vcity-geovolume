@@ -17,7 +17,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
    * @param {object} configSparqlWidget.namespaceLabels Prefix declarations which will replace text labels in the Legend.
    *                                                    This doesn't (yet) affect the legend font size.
    */
-  constructor(configSparqlWidget,itownsView) {
+  constructor(configSparqlWidget, itownsView) {
     super();
     if (
       !configSparqlWidget ||
@@ -52,11 +52,13 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
   update(response) {
     this.clearCanvas();
     this.data.formatResponseData(response);
-    const links = this.data.links.map((d) => Object.create(d));
-    const nodes = this.data.nodes.map((d) => Object.create(d));
-    this.data.typeList.forEach((el,i) => {
+    console.log(this.data.typeList);
+    this.data.typeList.forEach((el, i) => {
       this.data.typeList[i] = el.split("#").slice(-1);
     });
+    const links = this.data.links.map((d) => Object.create(d));
+    const nodes = this.data.nodes.map((d) => Object.create(d));
+
     const legend = this.prefixLegend(this.data.typeList);
     const colorScale = this.colorSetOrScale;
     const setColor = function (d, default_color, override_color = undefined) {
@@ -71,7 +73,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
         "link",
         d3.forceLink(links).id((d) => d.id)
       )
-      .force("charge", d3.forceManyBody().strength(-100))
+      .force("charge", d3.forceManyBody().strength(-200))
       .force("center", d3.forceCenter(this.width / 2, this.height / 2));
 
     const zoom = d3.zoom().on("zoom", this.handleZoom);
@@ -98,13 +100,16 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
       .attr("stroke", (d) => setColor(d.color_id, "#ddd", "#111"))
       .attr("fill", (d) => setColor(d.color_id, "black"))
       .on("click", (event, datum) => {
-        console.log(this.itownsView);        
-        
-        this.itownsView.getLayers().filter((el) => el.isC3DTilesLayer).forEach((layer) => {
-          layer.selectedObjectId = this.data.nodes[datum.index].id.split("#").slice(-1);
-          layer.updateStyle();
-          this.itownsView.notifyChange();
-        });
+        this.itownsView
+          .getLayers()
+          .filter((el) => el.isC3DTilesLayer)
+          .forEach((layer) => {
+            layer.selectedObjectId = this.data.nodes[datum.index].id
+              .split("#")
+              .slice(-1);
+            layer.updateStyle();
+            this.itownsView.notifyChange();
+          });
         this.dispatchEvent({
           type: "click",
           message: "node click event",
@@ -124,18 +129,24 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
         );
         node_label
           .filter((e, j) => {
+            return datum.index != j;
+          })
+          .style("visibility", "hidden");
+        node_label
+          .filter((e, j) => {
             return datum.index == j;
+          })
+          .text(function (d) {
+            return getUriLocalname(d.id);
           })
           .style("fill", "white")
           .style("opacity", "1");
         link_label
           .filter((e) => {
-            return (
-              datum.index == e.target.index
-            );
+            return datum.index == e.target.index;
           })
           .style("fill", "white")
-          .style('visibility', 'visible');
+          .style("visibility", "visible");
         this.dispatchEvent({
           type: "mouseover",
           message: "node mouseover event",
@@ -155,7 +166,15 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
         );
         node_label
           .filter((e, j) => {
+            return datum.index != j;
+          })
+          .style("visibility", "visible");
+        node_label
+          .filter((e, j) => {
             return datum.index == j;
+          })
+          .text(function (d) {
+            return getUriLocalname(d.id).slice(0, 10);
           })
           .style("fill", "white");
         link_label
@@ -165,7 +184,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
             );
           })
           .style("fill", "grey")
-          .style('visibility', 'hidden');
+          .style("visibility", "hidden");
         this.dispatchEvent({
           type: "mouseout",
           message: "node mouseout event",
@@ -183,7 +202,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
       .enter()
       .append("text")
       .text(function (d) {
-        return getUriLocalname(d.id);
+        return getUriLocalname(d.id).slice(0, 10);
       })
       .style("text-anchor", "middle")
       .style("font-family", "Arial")
@@ -211,7 +230,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
       .style("fill", "white")
       // .style("opacity", "0.5")
       // .style('fill', 'white')
-      .style('visibility', 'hidden')
+      .style("visibility", "hidden")
       .style("pointer-events", "none")
       .attr("class", "link_label");
 
@@ -276,7 +295,7 @@ export class D3GraphCanvas extends THREE.EventDispatcher {
       .attr("y", (d, i) => (92 + 5 * Math.floor(i / 3)).toString() + "%")
       .text((d) => d)
       .style("fill", "FloralWhite")
-      .style("font-size", "4px");
+      .style("font-size", "6px");
   }
 
   /**

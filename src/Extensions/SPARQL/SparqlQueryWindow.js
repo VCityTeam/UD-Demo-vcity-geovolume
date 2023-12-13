@@ -39,7 +39,7 @@ export class SparqlQueryWindow {
       this.domElement.style.visibility = "hidden";
     };
     const uiDomElement = document.createElement("div");
-    uiDomElement.classList.add("full_screen");
+    uiDomElement.classList.add("full_screen");  
     document.body.appendChild(uiDomElement);
     uiDomElement.appendChild(this.domElement);
 
@@ -115,9 +115,11 @@ export class SparqlQueryWindow {
               graphButton.onclick = () => {
                 Promise.all(promises).then(() => {
                   let index_temp = -1;
+                  console.log(c.variantIdentifier);
+                  if (c.variantIdentifier == "file") index_temp = 0;
                   if (c.variantIdentifier.includes("GMLID")) index_temp = 1;
-                  if (c.variantIdentifier.includes("GUID")) index_temp = 2;
-                  if (index_temp == 1 || index_temp == 2) {
+                  if (c.variantIdentifier.includes("GUID")) index_temp = 3;
+                  if (index_temp != -1) {
                     const query = this.queries[index_temp].text.replaceAll(
                       "$ID",
                       c.variantIdentifier.split("=").slice(-1)[0]

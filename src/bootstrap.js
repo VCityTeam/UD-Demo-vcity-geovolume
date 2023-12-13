@@ -107,8 +107,8 @@ loadMultipleJSON([
     geoVolumeModule.window
   );
 
-  const scaleWidget = new ScaleWidget(view);
-  const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view, view);
+  // const scaleWidget = new ScaleWidget(view);
+  // const MyscaleWidget = new MyScaleWidget(geoVolumeModule.view, view);
 
   // //// LAYER CHOICE MODULE
   // const layerChoice = new udvizBrowser.Widget.LayerChoice(

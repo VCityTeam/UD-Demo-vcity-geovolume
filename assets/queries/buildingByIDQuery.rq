@@ -17,4 +17,4 @@ WHERE {
   FILTER(?subjectType != owl:NamedIndividual)
   FILTER(?objectType != owl:NamedIndividual)
 }
-LIMIT 5
+LIMIT 10
